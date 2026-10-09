@@ -10,7 +10,8 @@ import * as ajustes from './pestanas/ajustes.js';
 const PESTANAS = { hoy, forma, fatiga, carrera, cuerpo, ajustes };
 const vista = document.getElementById('vista');
 const estado = { cierres: [], ayunos: [], ayunoActual: null, resumen: null, ajustes: null };
-let actual = (location.hash || '#hoy').slice(1);
+const valida = t => Object.hasOwn(PESTANAS, t) ? t : 'hoy';
+let actual = valida((location.hash || '#hoy').slice(1));
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
@@ -20,9 +21,10 @@ async function recargar() {
   pintar();
 }
 
-function ir(tab) { actual = PESTANAS[tab] ? tab : 'hoy'; history.replaceState(null, '', '#' + actual); pintar(); vista.focus(); window.scrollTo(0, 0); }
+function ir(tab) { actual = valida(tab); history.replaceState(null, '', '#' + actual); pintar(); vista.focus(); window.scrollTo(0, 0); }
 
 function pintar() {
+  if (!estado.ajustes) return;   // sin sesión o sin datos cargados: no repintar (no tapar el login ni pintar nulos)
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === actual ? 'page' : 'false'));
   const r = estado.resumen;
   document.getElementById('cab-sub').textContent = actual === 'hoy' || actual === 'ajustes' || !r
@@ -41,11 +43,12 @@ function pintarLogin(msg) {
   const codigo = h('input'); codigo.inputMode = 'numeric'; codigo.autocomplete = 'one-time-code'; codigo.placeholder = '123456'; codigo.hidden = true;
   const btn = h('button', 'btn primario', 'Enviarme el código'); const m = h('div', 'msg', msg || '');
   btn.onclick = async () => {
-    m.className = 'msg'; m.textContent = '';
+    m.className = 'msg'; m.textContent = ''; btn.disabled = true;
     try {
       if (codigo.hidden) { await pedirCodigo(email.value.trim()); codigo.hidden = false; btn.textContent = 'Entrar'; m.textContent = 'Código enviado. Mira tu correo.'; codigo.focus(); }
       else { await verificarCodigo(email.value.trim(), codigo.value.trim()); arrancar(); }
     } catch (e) { m.className = 'msg err'; m.textContent = 'No ha funcionado: ' + (e.message || e) + '. Revisa el email o el código.'; }
+    finally { btn.disabled = false; }
   };
   [email, codigo, btn, m].forEach(x => c.appendChild(x)); vista.appendChild(c);
 }

@@ -23,7 +23,7 @@ export async function leerAyunos(desde) { return ok(await sb.from('ayunos').sele
 export async function ultimoResumen() { return ok(await sb.from('resumenes').select('*').order('semana', { ascending: false }).limit(1).maybeSingle()); }
 export async function leerAjustes() {
   const a = ok(await sb.from('ajustes').select('*').maybeSingle());
-  return a || ok(await sb.from('ajustes').upsert({ user_id: _uid }, { onConflict: 'user_id' }).select().single());
+  return a || ok(await sb.from('ajustes').upsert({ user_id: _uid, avisos: false }, { onConflict: 'user_id' }).select().single());
 }
 export async function guardarAjustes(cambios) { return ok(await sb.from('ajustes').update(cambios).eq('user_id', _uid).select().single()); }
 export async function guardarSuscripcion(s) {
