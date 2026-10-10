@@ -1,4 +1,4 @@
-import { sesion, pedirCodigo, verificarCodigo, leerCierres, leerAyunoActual, leerAyunos, ultimoResumen, leerAjustes } from './datos.js';
+import { sesion, entrar, leerCierres, leerAyunoActual, leerAyunos, ultimoResumen, leerAjustes } from './datos.js';
 import { h, diasAtras, fmtFecha } from './util.js';
 import * as hoy from './pestanas/hoy.js';
 import * as forma from './pestanas/forma.js';
@@ -38,19 +38,19 @@ function pintar() {
 function pintarLogin(msg) {
   document.getElementById('tabs').hidden = true; document.getElementById('btn-ajustes').hidden = true;
   vista.textContent = '';
-  const c = h('section', 'card'); c.appendChild(h('h1', null, 'NEXO Pulso')); c.appendChild(h('p', 'lbl', 'Entra con tu email: te llega un código de 6 dígitos.'));
-  const email = h('input'); email.type = 'email'; email.autocomplete = 'email'; email.placeholder = 'nombre@ejemplo.com';
-  const codigo = h('input'); codigo.inputMode = 'numeric'; codigo.autocomplete = 'one-time-code'; codigo.placeholder = '123456'; codigo.hidden = true;
-  const btn = h('button', 'btn primario', 'Enviarme el código'); const m = h('div', 'msg', msg || '');
-  btn.onclick = async () => {
-    m.className = 'msg'; m.textContent = ''; btn.disabled = true;
-    try {
-      if (codigo.hidden) { await pedirCodigo(email.value.trim()); codigo.hidden = false; btn.textContent = 'Entrar'; m.textContent = 'Código enviado. Mira tu correo.'; codigo.focus(); }
-      else { await verificarCodigo(email.value.trim(), codigo.value.trim()); arrancar(); }
-    } catch (e) { m.className = 'msg err'; m.textContent = 'No ha funcionado: ' + (e.message || e) + '. Revisa el email o el código.'; }
+  const c = h('section', 'card'); c.appendChild(h('h1', null, 'NEXO Pulso')); c.appendChild(h('p', 'lbl', 'Entra con tu email y tu contraseña.'));
+  const f = h('form'); f.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+  const email = h('input'); email.type = 'email'; email.autocomplete = 'username'; email.placeholder = 'nombre@ejemplo.com'; email.setAttribute('aria-label', 'Email');
+  const pass = h('input'); pass.type = 'password'; pass.autocomplete = 'current-password'; pass.placeholder = 'Contraseña'; pass.setAttribute('aria-label', 'Contraseña');
+  const btn = h('button', 'btn primario', 'Entrar'); btn.type = 'submit';
+  const m = h('div', 'msg', msg || '');
+  f.onsubmit = async e => {
+    e.preventDefault(); m.className = 'msg'; m.textContent = ''; btn.disabled = true;
+    try { await entrar(email.value.trim(), pass.value); arrancar(); }
+    catch (err) { m.className = 'msg err'; m.textContent = 'No ha funcionado: revisa el email y la contraseña.'; }
     finally { btn.disabled = false; }
   };
-  [email, codigo, btn, m].forEach(x => c.appendChild(x)); vista.appendChild(c);
+  [email, pass, btn].forEach(x => f.appendChild(x)); c.appendChild(f); c.appendChild(m); vista.appendChild(c);
 }
 
 async function arrancar() {

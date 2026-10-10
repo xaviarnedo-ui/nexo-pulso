@@ -6,8 +6,7 @@ const ok = ({ data, error }) => { if (error) throw error; return data; };
 
 export async function sesion() { const s = ok(await sb.auth.getSession()).session; _uid = s ? s.user.id : null; return s; }
 export const uid = () => _uid;
-export async function pedirCodigo(email) { ok(await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } })); }
-export async function verificarCodigo(email, token) { const s = ok(await sb.auth.verifyOtp({ email, token, type: 'email' })).session; _uid = s.user.id; return s; }
+export async function entrar(email, password) { const s = ok(await sb.auth.signInWithPassword({ email, password })).session; _uid = s.user.id; return s; }
 export async function salir() { await sb.auth.signOut(); _uid = null; }
 
 export async function leerCierres(desde) { return ok(await sb.from('cierres').select('*').gte('fecha', desde).order('fecha', { ascending: false })); }
