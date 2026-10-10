@@ -70,7 +70,7 @@ export function pintar(v, estado) {
     const k = h('section', 'card'); k.appendChild(cabecera(act.actual ? 'Esta semana' : 'Última semana', act.fase || ''));
     const l = h('div', 'lista'); l.appendChild(dato('Carreras', ent(act.running), act.objetivo ? 'previstas ' + rango(act.objetivo.running) : '', colores.running));
     const dif = prev > 0 && act.km != null ? Math.round((act.km / prev - 1) * 100) : null;
-    l.appendChild(dato('Km', num(act.km, 0), dif == null ? '' : (dif > 0 ? '+' : dif < 0 ? '−' : '') + Math.abs(dif) + ' % sobre la anterior', colores.volumen));
+    l.appendChild(dato('Km', num(act.km, 0), dif == null ? '' : (dif > 0 ? '+' : dif < 0 ? '−' : '') + Math.abs(dif) + ' % frente a la anterior', colores.volumen));
     if (act.tirada_km) l.appendChild(dato('Tirada larga', num(act.tirada_km) + ' km', '', 'gris'));
     l.appendChild(dato('CrossFit', ent(act.crossfit), act.objetivo ? 'previstos ' + rango(act.objetivo.crossfit) : '', colores.crossfit));
     if (act.facil_pct != null) l.appendChild(dato('% fácil', pct(act.facil_pct), '', colores.facil));
@@ -78,8 +78,8 @@ export function pintar(v, estado) {
   }
 
   if ((c.ritmos || []).length) {
-    const rr = h('section', 'card'); rr.appendChild(cabecera('Ritmos', 'min/km'));
-    const l = h('div', 'lista'); c.ritmos.forEach(x => l.appendChild(dato(RITMO[x.tipo] || limpia(x.tipo), limpia(x.valor).replace(/\/km$/, ''))));
+    const rr = h('section', 'card'); rr.appendChild(cabecera('Ritmos'));
+    const l = h('div', 'lista'); c.ritmos.forEach(x => l.appendChild(dato(RITMO[x.tipo] || limpia(x.tipo), limpia(x.valor).replace(/\s*\/km$/, ' /km'))));
     rr.appendChild(l); v.appendChild(rr);
   }
 }

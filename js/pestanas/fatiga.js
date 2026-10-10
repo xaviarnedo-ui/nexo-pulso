@@ -27,7 +27,7 @@ export function pintar(v, estado) {
   const li = h('div', 'lista');
   if (fr.valor != null) {
     const dif = fr.sobre_base == null ? null : Math.round(fr.sobre_base);   // solo si se nota: +0,1 lpm no es nada
-    li.appendChild(dato('FC en reposo', num(fr.valor, 0), dif ? conSigno(dif, 0) + ' sobre tu base' : '', colorFC(fr.sobre_base)));
+    li.appendChild(dato('FC en reposo', num(fr.valor, 0), dif ? conSigno(dif, 0) + (dif > 0 ? ' sobre tu base' : ' bajo tu base') : '', colorFC(fr.sobre_base)));
   }
   if (t.sueno_pct != null) li.appendChild(dato('Sueño', pct(t.sueno_pct), '', colorSueno(t.sueno_pct)));
   if (t.carga) li.appendChild(dato('Carga 7 d', num(t.carga.semana, 0), t.carga.media_4 == null ? '' : 'media ' + num(t.carga.media_4, 0), 'gris'));
