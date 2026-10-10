@@ -35,14 +35,45 @@ export function linea(serie, { meta = null, w = 320, h: hh = 96 } = {}) {
   return s;
 }
 
+const TONO = { verde: 'var(--verde)', ambar: 'var(--ambar)', rojo: 'var(--rojo)', gris: 'var(--muted)' };
+
+// Punto de estado (12 px). El color va por clase; el nombre del color, en aria-label.
+export function punto(color) {
+  const c = TONO[color] ? color : 'gris';
+  const e = h('span', 'punto ' + c); e.setAttribute('role', 'img'); e.setAttribute('aria-label', c === 'ambar' ? 'ámbar' : c); return e;
+}
+
+// Semáforo vertical de tres luces: solo `color` encendida, las otras al 18 %. gris = las tres apagadas. tam = alto en px.
+export function semaforo(color, tam = 56) {
+  const W = 44, H = 100, s = el('svg', { viewBox: `0 0 ${W} ${H}`, width: Math.round(tam * W / H), height: tam, class: 'semaforo-svg', role: 'img', 'aria-label': 'Semáforo: ' + (color === 'ambar' ? 'ámbar' : color === 'gris' || !TONO[color] ? 'sin datos' : color) });
+  el('rect', { x: 1, y: 1, width: W - 2, height: H - 2, rx: 12, fill: 'var(--surface-2)', stroke: 'var(--line)', 'stroke-width': 1.5 }, s);
+  ['rojo', 'ambar', 'verde'].forEach((c, i) => {
+    const cy = 19 + i * 31, enc = c === color;
+    if (enc) el('circle', { cx: W / 2, cy, r: 16, fill: TONO[c], opacity: 0.22 }, s);
+    el('circle', { cx: W / 2, cy, r: 11.5, fill: TONO[c], opacity: enc ? 1 : 0.18 }, s);
+  });
+  return s;
+}
+
+// Barras por semana. Cada item: { v, color?, futura?, actual?, ghost?, lo?, hi? }.
+// color 'verde' | 'ambar' | 'gris' pinta la barra; sin color, el estilo anterior (acento) y la banda lo..hi si viene.
+// futura dibuja una barra clara a la altura de `ghost` (o `hi`); actual, la barra con contorno.
 export function barras(items, { w = 320, h: hh = 96 } = {}) {
   const s = lienzo(w, hh); if (!items.length) return s;
-  const max = Math.max(1, ...items.map(i => Math.max(i.v || 0, i.hi || 0))) * 1.1, bw = w / items.length;
+  const max = Math.max(1, ...items.map(i => Math.max(i.v || 0, i.hi || 0, i.ghost || 0))) * 1.1, bw = w / items.length;
   items.forEach((it, i) => {
     const x = i * bw + bw * 0.18, ancho = bw * 0.64, Y = v => hh - v / max * hh;
     if (it.lo != null && it.hi != null) el('rect', { x: i * bw + 2, width: bw - 4, y: Y(it.hi), height: Math.max(1, Y(it.lo) - Y(it.hi)), fill: 'var(--accent-soft)' }, s);
-    if (it.futura) el('rect', { x, width: ancho, y: Y(it.hi || 0), height: hh - Y(it.hi || 0), fill: 'none', stroke: 'var(--line)', 'stroke-dasharray': '3 3', rx: 3 }, s);
-    else el('rect', { x, width: ancho, y: Y(it.v || 0), height: hh - Y(it.v || 0), rx: 3, fill: it.actual ? 'var(--warm)' : 'var(--accent)' }, s);
+    if (it.futura) {
+      const alto = it.ghost || it.hi || 0;
+      if (it.color) el('rect', { x, width: ancho, y: Y(alto), height: Math.max(2, hh - Y(alto)), rx: 3, fill: 'var(--line)', opacity: 0.7 }, s);
+      else el('rect', { x, width: ancho, y: Y(alto), height: hh - Y(alto), fill: 'none', stroke: 'var(--line)', 'stroke-dasharray': '3 3', rx: 3 }, s);
+    } else {
+      const alto = Math.max(it.color ? 3 : 0, hh - Y(it.v || 0));
+      const rect = el('rect', { x, width: ancho, y: hh - alto, height: alto, rx: 3, fill: it.color ? (it.color === 'gris' ? 'var(--muted)' : TONO[it.color]) : it.actual ? 'var(--warm)' : 'var(--accent)' }, s);
+      if (it.color === 'gris') rect.setAttribute('opacity', 0.45);
+      if (it.color && it.actual) { rect.setAttribute('stroke', 'var(--ink)'); rect.setAttribute('stroke-width', 2); }
+    }
   });
   return s;
 }

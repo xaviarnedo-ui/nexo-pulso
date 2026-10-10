@@ -1,6 +1,7 @@
 import { guardarCierre, empezarAyuno, romperAyuno, guardarAjustes } from '../datos.js';
-import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre } from '../util.js';
-import { anillo, racha } from '../graficos.js';
+import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, diasAtras } from '../util.js';
+import { anillo, racha, punto } from '../graficos.js';
+import { estadoFatiga } from '../semaforos.js';
 
 const PREGUNTAS = [
   ['alcohol', 'Alcohol hoy', 'c3', [['0', '0'], ['1-2', '1–2'], ['3+', '3+']]],
@@ -107,10 +108,22 @@ function tarjetaCierre(estado, recargar, repintar) {
   c.appendChild(guardar); c.appendChild(m); return c;
 }
 
+const NOMBRE_ESTADO = { verde: 'verde', ambar: 'ámbar', rojo: 'rojo', gris: 'sin datos' };
+// Franja de estado: recuperación (la misma lógica que Fatiga, con el síntoma reciente en rojo; toca para ir a Fatiga) y cierre de hoy.
+function franjaEstado(estado, ir) {
+  const f = h('div', 'franja-estado');
+  const rec = estadoFatiga(estado.resumen && estado.resumen.datos.fatiga, estado.cierres, diasAtras(2)).estado;
+  const b = h('button'); b.type = 'button'; b.append(punto(rec), h('span', null, 'Recuperación: ' + NOMBRE_ESTADO[rec])); b.onclick = () => ir('fatiga');
+  const hecho = estado.cierres.some(x => x.fecha === fechaCierre());
+  const c = h('div'); c.append(punto(hecho ? 'verde' : 'ambar'), h('span', null, 'Cierre de hoy: ' + (hecho ? 'hecho' : 'pendiente')));
+  f.append(b, c); return f;
+}
+
 export function pintar(v, estado, { recargar, ir }) {
   clearInterval(tick);   // cada repintado crea su propio contador; el anterior no debe seguir vivo
   const repintar = () => { v.textContent = ''; pintar(v, estado, { recargar, ir }); };
   v.appendChild(h('h1', null, 'Hoy'));
+  v.appendChild(franjaEstado(estado, ir));
   const r = estado.resumen, a = estado.ajustes;
   if (r && (!a || !a.resumen_visto || new Date(r.creado) > new Date(a.resumen_visto))) {
     const caja = h('div'); const b = h('button', 'aviso'); const t = h('div', 'crece'); t.appendChild(h('div', 'titulo-aviso', 'Resumen nuevo de la semana'));
