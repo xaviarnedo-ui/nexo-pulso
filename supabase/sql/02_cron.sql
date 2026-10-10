@@ -5,7 +5,7 @@ create extension if not exists pg_net with schema extensions;
 select cron.unschedule('pulso-cierre') where exists (select 1 from cron.job where jobname = 'pulso-cierre');
 select cron.schedule('pulso-cierre', '0 * * * *', $$
   select net.http_post(
-    url := 'https://<ref>.supabase.co/functions/v1/pulso-notify',
+    url := 'https://lunaktorykgmhejojiai.supabase.co/functions/v1/pulso-notify',
     headers := jsonb_build_object('Content-Type', 'application/json',
       'x-pulso-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'pulso_notify_secret')),
     body := '{"tipo":"cierre"}'::jsonb)
