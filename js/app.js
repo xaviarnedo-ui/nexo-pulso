@@ -53,14 +53,32 @@ function pintarLogin(msg) {
   [email, pass, btn].forEach(x => f.appendChild(x)); c.appendChild(f); c.appendChild(m); vista.appendChild(c);
 }
 
+const sinRed = e => !navigator.onLine || e instanceof TypeError || /fetch|network/i.test((e && e.message) || '');
+let sinConexionPintado = false;   // el aviso de arranque se retira solo al volver la red
+function avisoSinConexion() {
+  sinConexionPintado = true;
+  document.getElementById('tabs').hidden = true; document.getElementById('btn-ajustes').hidden = true;
+  vista.textContent = '';
+  vista.appendChild(h('div', 'aviso', 'Sin conexión: abre la app cuando vuelva la red.'));
+}
+
 async function arrancar() {
-  if (!(await sesion())) return pintarLogin();
+  let s;
+  sinConexionPintado = false;
+  try { s = await sesion(); }
+  catch (e) { return sinRed(e) ? avisoSinConexion() : pintarLogin(); }   // sin red no se puede ni renovar la sesión; con red, a entrar de nuevo
+  if (!s) return pintarLogin();
   document.getElementById('tabs').hidden = false; document.getElementById('btn-ajustes').hidden = false;
-  try { await recargar(); } catch (e) { vista.textContent = ''; vista.appendChild(h('div', 'aviso', 'No se han podido cargar tus datos: ' + (e.message || e))); }
+  try { await recargar(); }
+  catch (e) {
+    vista.textContent = '';
+    if (sinRed(e)) sinConexionPintado = true;
+    vista.appendChild(h('div', 'aviso', sinRed(e) ? 'Sin conexión: abre la app cuando vuelva la red.' : 'No se han podido cargar tus datos: ' + (e.message || e)));
+  }
 }
 
 document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => ir(b.dataset.tab)));
 document.getElementById('btn-ajustes').addEventListener('click', () => ir('ajustes'));
 document.addEventListener('visibilitychange', () => { if (!document.hidden && estado.ajustes) recargar().catch(() => {}); });
-window.addEventListener('online', pintar); window.addEventListener('offline', pintar);
+window.addEventListener('online', () => { if (sinConexionPintado) arrancar(); else pintar(); }); window.addEventListener('offline', pintar);
 arrancar();

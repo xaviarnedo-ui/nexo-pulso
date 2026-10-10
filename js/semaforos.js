@@ -111,11 +111,22 @@ export function sintomasRecientes(cierres, desde) {
 export const FRASE_SIN_DATOS = 'Sin datos suficientes esta semana.';
 export const TEXTO_ENFERMO = 'Has marcado síntomas: descanso o algo muy suave (E5).';
 export const FRASE_PROTEINA_BAJA = 'Proteína muy por debajo de la meta: sube la ingesta.';
-// Estado de la Fatiga con el resumen y los cierres de los últimos 2 días: un síntoma lo pasa a rojo al momento.
+export const FRASES_FATIGA = {
+  verde: 'Todo en orden: entrena lo que toca.',
+  ambar: 'Recupera antes de apretar: calidad solo con la HRV en tu franja.',
+  rojo: 'Hoy toca descanso o algo muy suave.',
+};
+// Estado de la Fatiga. El color sale siempre de los datos (HRV baja y FC sobre la base, regla E1) y de los cierres en directo
+// de los últimos 2 días (síntomas, E5); nunca de `fatiga.estado` del resumen, que puede llevar días de retraso.
 export function estadoFatiga(fatiga, cierres, desde) {
   if (hayEnfermo(cierres, desde)) return { estado: 'rojo', texto: TEXTO_ENFERMO };
-  if (!fatiga || !GRAVEDAD[fatiga.estado]) return { estado: 'gris', texto: FRASE_SIN_DATOS };
-  return { estado: fatiga.estado, texto: fatiga.texto || FRASE_SIN_DATOS };
+  if (!fatiga) return { estado: 'gris', texto: FRASE_SIN_DATOS };
+  const bajo = fatiga.hrv_bajo, sobre = fatiga.fc_reposo && fatiga.fc_reposo.sobre_base;
+  if (bajo == null && !hay(sobre)) return { estado: 'gris', texto: FRASE_SIN_DATOS };
+  const fc = hay(sobre) ? sobre : 0;
+  const estado = bajo && fc >= FC_ROJO - EPS ? 'rojo' : bajo || fc >= FC_AMBAR - EPS ? 'ambar' : 'verde';
+  // La frase del resumen solo si coincide con el color calculado; si no, una fija por color.
+  return { estado, texto: fatiga.estado === estado && fatiga.texto ? fatiga.texto : FRASES_FATIGA[estado] };
 }
 
 const FRASES = {

@@ -130,15 +130,36 @@ test('hayEnfermo y estadoFatiga: síntomas recientes suben a rojo con su texto',
   assert.equal(S.hayEnfermo(cierres, '2026-10-05'), true);
   assert.equal(S.hayEnfermo([], '2026-10-05'), false);
   assert.equal(S.hayEnfermo(null, '2026-10-05'), false);
-  const t = { estado: 'verde', texto: 'Todo en orden.' };
+  const t = { estado: 'verde', texto: 'Todo en orden.', hrv_bajo: false, fc_reposo: { sobre_base: 1 } };
   assert.deepEqual(S.estadoFatiga(t, cierres, '2026-10-08'), { estado: 'verde', texto: 'Todo en orden.' });
   const e = S.estadoFatiga(t, cierres, '2026-10-05');
   assert.equal(e.estado, 'rojo');
   assert.equal(e.texto, S.TEXTO_ENFERMO);
   assert.deepEqual(S.estadoFatiga(null, [], '2026-10-05'), { estado: 'gris', texto: S.FRASE_SIN_DATOS });
   assert.equal(S.estadoFatiga(null, cierres, '2026-10-05').estado, 'rojo');
-  assert.equal(S.estadoFatiga({ estado: 'raro' }, [], '2026-10-05').estado, 'gris');
-  assert.equal(S.estadoFatiga({ estado: 'ambar' }, [], '2026-10-05').texto, S.FRASE_SIN_DATOS);
+  assert.equal(S.estadoFatiga({ estado: 'raro' }, [], '2026-10-05').estado, 'gris');   // sin hrv_bajo ni FC: nada que juzgar
+});
+
+test('estadoFatiga: el color sale de HRV y FC, no del estado del resumen; el síntoma solo cuenta si es reciente', () => {
+  const f = (estado, hrv_bajo, sobre_base, texto) => ({ estado, texto, hrv_bajo, fc_reposo: { sobre_base } });
+  const hoy = '2026-10-13', desde = '2026-10-11';
+  // El resumen dice rojo (arrastraba un síntoma viejo), pero no hay síntomas en directo y HRV y FC están normales.
+  assert.deepEqual(S.estadoFatiga(f('rojo', false, 1, 'texto viejo'), [{ fecha: '2026-10-06', enfermo: true }], desde), { estado: 'verde', texto: S.FRASES_FATIGA.verde });
+  // Ámbar: HRV baja o FC >= 3; rojo: ambas.
+  assert.equal(S.estadoFatiga(f('verde', true, 1), [], desde).estado, 'ambar');
+  assert.equal(S.estadoFatiga(f('verde', false, 3), [], desde).estado, 'ambar');
+  assert.equal(S.estadoFatiga(f('verde', true, 5), [], desde).estado, 'rojo');
+  assert.equal(S.estadoFatiga(f('verde', true, null), [], desde).estado, 'ambar');
+  assert.equal(S.estadoFatiga(f('verde', false, 9), [], desde).estado, 'ambar');   // FC alta sola no llega a rojo
+  // La frase del resumen se usa solo cuando coincide con el color calculado.
+  assert.equal(S.estadoFatiga(f('ambar', true, 1, 'frase del resumen'), [], desde).texto, 'frase del resumen');
+  assert.equal(S.estadoFatiga(f('rojo', true, 1, 'frase del resumen'), [], desde).texto, S.FRASES_FATIGA.ambar);
+  // Síntomas en directo de los últimos 2 días: rojo con su texto, aunque todo lo demás esté bien.
+  const e = S.estadoFatiga(f('verde', false, 0, 'ok'), [{ fecha: hoy, enfermo: true }], desde);
+  assert.deepEqual(e, { estado: 'rojo', texto: S.TEXTO_ENFERMO });
+  // Sin datos: gris.
+  assert.equal(S.estadoFatiga({ hrv_bajo: null, fc_reposo: {} }, [], desde).estado, 'gris');
+  assert.equal(S.estadoFatiga({}, [], desde).estado, 'gris');
 });
 
 test('frase: textos por pestaña y color; gris = sin datos', () => {
