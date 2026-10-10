@@ -45,8 +45,13 @@ export function pintar(v, estado) {
   v.appendChild(c);
 
   const marc = [];
-  if (f.vo2max) marc.push(dato('VO2max', num(f.vo2max.valor), f.vo2max.rango ? `rango ${num(f.vo2max.rango[0])}–${num(f.vo2max.rango[1])}` : ''));
-  (f.fuerza || []).forEach(x => marc.push(dato(corto(x.nombre), num(x.valor, 2) + (/peso/.test(x.unidad || '') ? '×' : ' ' + (x.unidad || '')).trimEnd())));
+  if (f.vo2max) marc.push(dato('VO2max', num(f.vo2max.valor), f.vo2max.rango ? `rango probable ${num(f.vo2max.rango[0])}–${num(f.vo2max.rango[1])}` : ''));
+  // Fuerza: el valor es el 1RM estimado en kg y debajo, cuántas veces tu peso; resúmenes anteriores sin kg, el valor relativo.
+  (f.fuerza || []).forEach(x => {
+    const rel = num(x.valor, 2) + (/peso/.test(x.unidad || '') ? '×' : ' ' + (x.unidad || '')).trimEnd();
+    if (x.rm1_kg != null) marc.push(dato(corto(x.nombre) + ' · 1RM est.', num(x.rm1_kg, 0) + ' kg', /peso/.test(x.unidad || '') ? num(x.valor, 2) + '× tu peso' : rel));
+    else marc.push(dato(corto(x.nombre), rel));
+  });
   if (marc.length) { const m = h('section', 'card'); m.appendChild(cabecera('Marcadores')); const lm = h('div', 'lista'); marc.forEach(x => lm.appendChild(x)); m.appendChild(lm); v.appendChild(m); }
 
   if ((f.poblacion || []).length) {

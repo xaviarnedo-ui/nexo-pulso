@@ -3,7 +3,7 @@ import { punto, insignia } from './graficos.js';
 
 const NOMBRE = { verde: 'Verde', ambar: 'Ámbar', rojo: 'Rojo', gris: 'Sin datos' };
 
-// Fila de indicador en una línea: punto de estado · etiqueta corta · valor a la derecha en mono.
+// Fila de indicador en una línea: punto de estado · etiqueta corta · valor a la derecha.
 // sec (opcional): segunda línea pequeña bajo el valor, sin paréntesis. color: 'verde' | 'ambar' | 'rojo' | 'gris' (hueco
 // vacío, alinea con las filas que sí llevan punto) o nada (sin hueco: tarjetas que son todo datos).
 export function dato(etq, valor, sec, color, cls) {

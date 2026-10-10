@@ -1,7 +1,7 @@
 import { h, num, diasAtras, conSigno, pct } from '../util.js';
-import { lineaFranja } from '../graficos.js';
+import { lineaFranja, medidor } from '../graficos.js';
 import { dato, tarjetaEstado, cabecera, heroe, tesela } from '../filas.js';
-import { colorHRV, colorFC, colorSueno, colorSintomas, colorSensacion, colorEstres, estadoFatiga, sintomasRecientes } from '../semaforos.js';
+import { colorHRV, colorFC, colorSueno, colorSintomas, colorSensacion, colorEstres, colorACWR, ratioCarga, fraseACWR, estadoFatiga, sintomasRecientes } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 
 const media = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
@@ -24,13 +24,26 @@ export function pintar(v, estado) {
   }
   v.appendChild(g);
 
+  // Carga aguda:crónica: la carga de 7 días frente a la media semanal de las 4 anteriores (E7).
+  const ratio = ratioCarga(t.carga);
+  if (ratio != null) {
+    const ca = h('section', 'card'), cc = colorACWR(ratio);
+    const hr = heroe('Carga aguda:crónica', num(ratio, 2), null, { color: cc });
+    if (cc !== 'gris') hr.querySelector('.grande').classList.add('t-' + cc);   // la cifra lleva el color de la zona
+    ca.appendChild(hr);
+    ca.appendChild(medidor(ratio, { min: 0.5, max: 2, cortes: [0.8, 1.3, 1.5],
+      zonas: [{ de: 0.5, a: 0.8, color: 'ambar' }, { de: 0.8, a: 1.3, color: 'verde' }, { de: 1.3, a: 1.5, color: 'ambar' }, { de: 1.5, a: 2, color: 'rojo' }] }));
+    ca.appendChild(h('div', 'frase-acwr', fraseACWR(ratio)));
+    if (t.carga.semana != null && t.carga.media_4 != null) ca.appendChild(h('div', 'pie', '7 días ' + num(t.carga.semana, 0) + ' · media semanal ' + num(t.carga.media_4, 0)));
+    v.appendChild(ca);
+  }
+
   const li = h('div', 'lista');
   if (fr.valor != null) {
     const dif = fr.sobre_base == null ? null : Math.round(fr.sobre_base);   // solo si se nota: +0,1 lpm no es nada
     li.appendChild(dato('FC en reposo', num(fr.valor, 0), dif ? conSigno(dif, 0) + (dif > 0 ? ' sobre tu base' : ' bajo tu base') : '', colorFC(fr.sobre_base)));
   }
   if (t.sueno_pct != null) li.appendChild(dato('Sueño', pct(t.sueno_pct), '', colorSueno(t.sueno_pct)));
-  if (t.carga) li.appendChild(dato('Carga 7 d', num(t.carga.semana, 0), t.carga.media_4 == null ? '' : 'media ' + num(t.carga.media_4, 0), 'gris'));
   if (li.children.length) { const l = h('section', 'card'); l.appendChild(li); v.appendChild(l); }
 
   // Tus cierres de los últimos 7 días; los síntomas, en la misma ventana que la regla (2 días) para el número y el punto.

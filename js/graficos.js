@@ -10,7 +10,7 @@ export function anillo(frac, color, texto, tam = 96) {
   el('circle', { cx: tam / 2, cy: tam / 2, r, fill: 'none', stroke: 'var(--line)', 'stroke-width': 8 }, s);
   el('circle', { cx: tam / 2, cy: tam / 2, r, fill: 'none', stroke: color, 'stroke-width': 8, 'stroke-linecap': 'round',
     'stroke-dasharray': c, 'stroke-dashoffset': c * (1 - Math.max(0, Math.min(1, frac))), transform: `rotate(-90 ${tam / 2} ${tam / 2})` }, s);
-  const t = el('text', { x: tam / 2, y: tam / 2 + 5, 'text-anchor': 'middle', style: 'font-family:var(--mono);font-size:15px;fill:var(--ink)' }, s);
+  const t = el('text', { x: tam / 2, y: tam / 2 + 5, 'text-anchor': 'middle', style: 'font-family:var(--sans);font-variant-numeric:tabular-nums lining-nums;font-size:15px;fill:var(--ink)' }, s);
   t.textContent = texto; return s;
 }
 
@@ -33,6 +33,17 @@ export function linea(serie, { meta = null, etiqueta = null, w = 320, h: hh = 96
   if (tieneMeta) { el('line', { x1: 0, x2: w, y1: Y(meta), y2: Y(meta), stroke: 'var(--muted)', 'stroke-dasharray': '4 4' }, s); if (etiqueta) { const t = el('text', { x: 0, y: Y(meta) - 5, 'text-anchor': 'start' }, s); t.textContent = etiqueta; } }
   el('polyline', { points: pts.map(({ p, i }) => `${X(i)},${Y(p.y)}`).join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, s);
   const u = pts[pts.length - 1]; el('circle', { cx: X(u.i), cy: Y(u.p.y), r: 3.5, fill: 'var(--accent)' }, s);
+  return s;
+}
+
+// Medidor horizontal con zonas de color y un marcador en `valor`. zonas: [{ de, a, color }] (color: 'verde' | 'ambar' | 'rojo');
+// cortes: valores a rotular bajo la barra. El marcador se ajusta a los extremos si el valor se sale de la escala.
+export function medidor(valor, { min, max, zonas, cortes = [], w = 320 } = {}) {
+  const alto = 10, y0 = 14, s = lienzo(w, 56); s.classList.add('medidor');
+  const X = v => (Math.max(min, Math.min(max, v)) - min) / (max - min) * w;
+  zonas.forEach(z => el('rect', { x: X(z.de), y: y0, width: X(z.a) - X(z.de), height: alto, class: 'zona-' + z.color, opacity: 0.85 }, s));
+  cortes.forEach(c => { const t = el('text', { x: Math.min(w - 10, Math.max(10, X(c))), y: y0 + alto + 18, 'text-anchor': 'middle' }, s); t.textContent = String(c).replace('.', ','); });
+  if (fin(valor)) { const x = X(valor); el('rect', { x: x - 3, y: y0 - 7, width: 6, height: alto + 14, rx: 3, class: 'marca-valor' }, s); }
   return s;
 }
 

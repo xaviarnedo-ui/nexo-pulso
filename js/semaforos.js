@@ -5,15 +5,15 @@
 // Entre 2 y 3 (valores con decimales) cuenta como verde, igual que el resumen.
 export const FC_AMBAR = 3, FC_ROJO = 5;
 // Sueño frente a tu necesidad (%).
-export const SUENO_VERDE = 90, SUENO_AMBAR = 80;
+export const SUENO_VERDE = 85, SUENO_AMBAR = 80;
 // Tiempo fácil (%).
 export const FACIL_VERDE = 80, FACIL_AMBAR = 70;
 // Subida máxima de km frente a la semana anterior (%).
 export const VOLUMEN_MAX_PCT = 30;
 // Ritmo de peso (kg/semana): verde de -0,8 a -0,3; ámbar entre -0,3 y 0 o por debajo de -0,8; rojo si sube.
 export const RITMO_PESO_MIN = -0.8, RITMO_PESO_MAX = -0.3;
-// Proteína media (g).
-export const PROTEINA_VERDE = 135, PROTEINA_AMBAR = 120;
+// Carga aguda:crónica (ACWR, evidencia E7): verde de 0,8 a 1,3; ámbar entre 1,3 y 1,5 o por debajo de 0,8; rojo por encima de 1,5.
+export const ACWR_MIN = 0.8, ACWR_MAX_VERDE = 1.3, ACWR_MAX_AMBAR = 1.5;
 // Índice de forma y sus pilares.
 export const INDICE_VERDE = 50, INDICE_AMBAR = 45;
 // Cierres de 7 días, escala 1-5.
@@ -57,9 +57,23 @@ export function colorRitmoPeso(r) {
   if (r > 0) return 'rojo';
   return r <= RITMO_PESO_MAX + EPS && r >= RITMO_PESO_MIN - EPS ? 'verde' : 'ambar';
 }
-export function colorProteina(g) {
-  if (!hay(g)) return 'gris';
-  return g >= PROTEINA_VERDE - EPS ? 'verde' : g >= PROTEINA_AMBAR - EPS ? 'ambar' : 'rojo';
+export function colorACWR(r) {
+  if (!hay(r)) return 'gris';
+  if (r > ACWR_MAX_AMBAR + EPS) return 'rojo';
+  return r >= ACWR_MIN - EPS && r <= ACWR_MAX_VERDE + EPS ? 'verde' : 'ambar';
+}
+// Ratio de la carga: el del resumen o, si es un resumen anterior sin él, semana / media_4. null si no se puede.
+export function ratioCarga(carga) {
+  if (!carga) return null;
+  if (hay(carga.ratio)) return carga.ratio;
+  return hay(carga.semana) && hay(carga.media_4) && carga.media_4 > 0 ? Math.round(carga.semana / carga.media_4 * 100) / 100 : null;
+}
+export function fraseACWR(r) {
+  const c = colorACWR(r);
+  if (c === 'gris') return '';
+  if (c === 'rojo') return 'Subida brusca de carga: reduce y prioriza recuperar.';
+  if (c === 'verde') return 'Carga estable.';
+  return r < ACWR_MIN ? 'Carga baja frente a tu media.' : 'Subida de carga: vigila la recuperación.';
 }
 export function colorIndice(x) {
   if (!hay(x)) return 'gris';
@@ -110,7 +124,6 @@ export function sintomasRecientes(cierres, desde) {
 
 export const FRASE_SIN_DATOS = 'Sin datos suficientes esta semana.';
 export const TEXTO_ENFERMO = 'Has marcado síntomas: descanso o algo muy suave (E5).';
-export const FRASE_PROTEINA_BAJA = 'Proteína muy por debajo de la meta: sube la ingesta.';
 export const FRASES_FATIGA = {
   verde: 'Todo en orden: entrena lo que toca.',
   ambar: 'Recupera antes de apretar: calidad solo con la HRV en tu franja.',
@@ -132,8 +145,6 @@ export function estadoFatiga(fatiga, cierres, desde) {
 const FRASES = {
   forma: { verde: 'En tu nivel o por encima.', ambar: 'Algo por debajo de tu base.', rojo: 'Por debajo de tu base: prioriza recuperar.' },
   carrera: { verde: 'Semana dentro del plan.', ambar: 'Revisa la semana: algo se sale del plan.', rojo: 'Semana fuera del plan.' },
-  cuerpo: { verde: 'Vas al ritmo de la meta.', ambar: 'Ajusta: el ritmo o la proteína no cuadran.', rojo: 'El peso sube: revisa la semana.' },
+  cuerpo: { verde: 'Vas al ritmo de la meta.', ambar: 'Ajusta el ritmo: no cuadra con la meta.', rojo: 'El peso sube: revisa la semana.' },
 };
 export function frase(tab, color) { return (FRASES[tab] && FRASES[tab][color]) || FRASE_SIN_DATOS; }
-// En Cuerpo el rojo también puede venir de la proteína: entonces no se dice que el peso sube.
-export function fraseCuerpo(color, colorRitmo) { return color === 'rojo' && colorRitmo !== 'rojo' ? FRASE_PROTEINA_BAJA : frase('cuerpo', color); }

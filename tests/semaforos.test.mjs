@@ -19,8 +19,8 @@ test('FC en reposo sobre la base: <=2 verde, 3-4 ámbar, >=5 rojo', () => {
   tabla(S.colorFC, [[-1, 'verde'], [0, 'verde'], [2, 'verde'], [2.9, 'verde'], [3, 'ambar'], [4, 'ambar'], [4.9, 'ambar'], [5, 'rojo'], [9, 'rojo'], [null, 'gris'], [undefined, 'gris']]);
 });
 
-test('Sueño frente a la necesidad: >=90 verde, 80-89 ámbar, <80 rojo', () => {
-  tabla(S.colorSueno, [[100, 'verde'], [90, 'verde'], [89, 'ambar'], [80, 'ambar'], [79, 'rojo'], [0, 'rojo'], [null, 'gris'], [undefined, 'gris']]);
+test('Sueño frente a la necesidad: >=85 verde, 80-84 ámbar, <80 rojo', () => {
+  tabla(S.colorSueno, [[100, 'verde'], [90, 'verde'], [85, 'verde'], [84, 'ambar'], [80, 'ambar'], [79, 'rojo'], [0, 'rojo'], [null, 'gris'], [undefined, 'gris']]);
 });
 
 test('Rango: dentro verde, fuera ámbar, sin dato gris', () => {
@@ -58,10 +58,6 @@ test('Ritmo de peso (kg/sem): -0,8..-0,3 verde; -0,3..0 y < -0,8 ámbar; > 0 roj
     [-0.81, 'ambar'], [-1.5, 'ambar'], [-0.29, 'ambar'], [-0.01, 'ambar'], [0, 'ambar'], [0.01, 'rojo'], [0.5, 'rojo'], [null, 'gris'], [undefined, 'gris']]);
 });
 
-test('Proteína media: >=135 verde, 120-134 ámbar, <120 rojo', () => {
-  tabla(S.colorProteina, [[150, 'verde'], [135, 'verde'], [134, 'ambar'], [120, 'ambar'], [119, 'rojo'], [0, 'rojo'], [null, 'gris'], [undefined, 'gris']]);
-});
-
 test('Índice de forma y pilares: >=50 verde, 45-49,9 ámbar, <45 rojo', () => {
   tabla(S.colorIndice, [[60, 'verde'], [50, 'verde'], [49.9, 'ambar'], [45, 'ambar'], [44.9, 'rojo'], [0, 'rojo'], [null, 'gris'], [undefined, 'gris']]);
 });
@@ -92,11 +88,11 @@ test('peor: rojo > ámbar > verde; ignora gris; vacío o todo gris es gris', () 
 
 test('Umbrales: constantes con nombre y exportadas', () => {
   assert.deepEqual([S.FC_AMBAR, S.FC_ROJO], [3, 5]);
-  assert.deepEqual([S.SUENO_VERDE, S.SUENO_AMBAR], [90, 80]);
+  assert.deepEqual([S.SUENO_VERDE, S.SUENO_AMBAR], [85, 80]);
   assert.deepEqual([S.FACIL_VERDE, S.FACIL_AMBAR], [80, 70]);
   assert.equal(S.VOLUMEN_MAX_PCT, 30);
   assert.deepEqual([S.RITMO_PESO_MIN, S.RITMO_PESO_MAX], [-0.8, -0.3]);
-  assert.deepEqual([S.PROTEINA_VERDE, S.PROTEINA_AMBAR], [135, 120]);
+  assert.deepEqual([S.ACWR_MIN, S.ACWR_MAX_VERDE, S.ACWR_MAX_AMBAR], [0.8, 1.3, 1.5]);
   assert.deepEqual([S.INDICE_VERDE, S.INDICE_AMBAR], [50, 45]);
   assert.deepEqual([S.SENSACION_VERDE, S.SENSACION_AMBAR], [3.5, 2.5]);
   assert.deepEqual([S.ESTRES_VERDE, S.ESTRES_AMBAR], [2.5, 3.5]);
@@ -170,17 +166,9 @@ test('frase: textos por pestaña y color; gris = sin datos', () => {
   assert.equal(S.frase('carrera', 'ambar'), 'Revisa la semana: algo se sale del plan.');
   assert.equal(S.frase('carrera', 'rojo'), 'Semana fuera del plan.');
   assert.equal(S.frase('cuerpo', 'verde'), 'Vas al ritmo de la meta.');
-  assert.equal(S.frase('cuerpo', 'ambar'), 'Ajusta: el ritmo o la proteína no cuadran.');
+  assert.equal(S.frase('cuerpo', 'ambar'), 'Ajusta el ritmo: no cuadra con la meta.');
   assert.equal(S.frase('cuerpo', 'rojo'), 'El peso sube: revisa la semana.');
   for (const t of ['forma', 'carrera', 'cuerpo']) assert.equal(S.frase(t, 'gris'), 'Sin datos suficientes esta semana.');
-});
-
-test('fraseCuerpo: el rojo por proteína no afirma que el peso sube', () => {
-  assert.equal(S.fraseCuerpo('rojo', 'rojo'), 'El peso sube: revisa la semana.');
-  assert.equal(S.fraseCuerpo('rojo', 'verde'), S.FRASE_PROTEINA_BAJA);
-  assert.equal(S.fraseCuerpo('rojo', 'gris'), S.FRASE_PROTEINA_BAJA);
-  assert.equal(S.fraseCuerpo('ambar', 'ambar'), 'Ajusta: el ritmo o la proteína no cuadran.');
-  assert.equal(S.fraseCuerpo('gris', 'gris'), 'Sin datos suficientes esta semana.');
 });
 
 test('Semana en curso: el recuento solo avisa si ya pasa del máximo; si no, gris', () => {
@@ -219,4 +207,25 @@ test('sintomasRecientes: nº de cierres con síntomas en la ventana, null si no 
   assert.equal(S.sintomasRecientes(null, '2026-10-08'), null);
   assert.equal(S.colorSintomas(S.sintomasRecientes(c, '2026-10-10')), 'gris');
   assert.equal(S.colorSintomas(S.sintomasRecientes([{ fecha: '2026-10-09', enfermo: false }], '2026-10-08')), 'verde');
+});
+
+test('Carga aguda:crónica: 0,8-1,3 verde; 1,3-1,5 y < 0,8 ámbar; > 1,5 rojo; sin dato gris', () => {
+  tabla(S.colorACWR, [[0.79, 'ambar'], [0.8, 'verde'], [0.96, 'verde'], [1.3, 'verde'], [1.31, 'ambar'], [1.5, 'ambar'], [1.51, 'rojo'], [2.4, 'rojo'], [0, 'ambar'], [null, 'gris'], [undefined, 'gris'], [NaN, 'gris']]);
+});
+
+test('ratioCarga: usa el ratio del resumen o lo calcula con semana y media_4', () => {
+  assert.equal(S.ratioCarga({ semana: 88, media_4: 92, ratio: 0.96 }), 0.96);
+  assert.equal(S.ratioCarga({ semana: 88, media_4: 92 }), 0.96);
+  assert.equal(S.ratioCarga({ semana: 88, media_4: 0 }), null);
+  assert.equal(S.ratioCarga({ semana: 88, media_4: null }), null);
+  assert.equal(S.ratioCarga({ ratio: null, semana: 100, media_4: 80 }), 1.25);
+  assert.equal(S.ratioCarga(null), null);
+});
+
+test('fraseACWR: una frase por zona', () => {
+  assert.equal(S.fraseACWR(1), 'Carga estable.');
+  assert.equal(S.fraseACWR(1.4), 'Subida de carga: vigila la recuperación.');
+  assert.equal(S.fraseACWR(0.7), 'Carga baja frente a tu media.');
+  assert.equal(S.fraseACWR(1.6), 'Subida brusca de carga: reduce y prioriza recuperar.');
+  assert.equal(S.fraseACWR(null), '');
 });

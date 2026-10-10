@@ -1,15 +1,14 @@
-import { h, num, conSigno, esCero, fechaCorta, pct } from '../util.js';
+import { h, num, conSigno, esCero, fechaCorta, pct, sinParentesis } from '../util.js';
 import { linea } from '../graficos.js';
 import { dato, tarjetaEstado, cabecera, heroe } from '../filas.js';
-import { colorRitmoPeso, colorProteina, peor, fraseCuerpo } from '../semaforos.js';
+import { colorRitmoPeso, frase } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 
 export function pintar(v, estado) {
   const r = estado.resumen; if (!r) return sinResumen(v, 'Cuerpo'); const c = r.datos.cuerpo;
-  const cRitmo = colorRitmoPeso(c.ritmo_kg_sem), cProt = colorProteina(c.nutricion && c.nutricion.proteina_g);
-  const global = peor([cRitmo, cProt]);
+  const cRitmo = colorRitmoPeso(c.ritmo_kg_sem);   // lo que se registra en Fitia no siempre es fiable: la comida no puntúa
   v.appendChild(h('h1', null, 'Cuerpo'));
-  v.appendChild(tarjetaEstado(global, fraseCuerpo(global, cRitmo)));
+  v.appendChild(tarjetaEstado(cRitmo, frase('cuerpo', cRitmo)));
 
   if (c.peso) {
     // El juicio es la tendencia (fila con punto); el cambio de una semana es solo contexto, en gris.
@@ -26,12 +25,22 @@ export function pintar(v, estado) {
   }
 
   if (c.nutricion) {
-    const dc = c.nutricion.dias_completos;
-    const n = h('section', 'card'); n.appendChild(cabecera('Comida', dc == null ? '' : num(dc, 0) + ' días completos'));
+    // Lo que deberías comer según tu plan (no lo registrado en Fitia): sin puntos, no es un juicio.
+    const nu = c.nutricion, dias = nu.objetivo || [];
+    const kcal = nu.kcal_semana != null ? nu.kcal_semana : (() => { const k = dias.map(x => x.kcal).filter(Number.isFinite); return k.length ? Math.round(k.reduce((s, x) => s + x, 0) / k.length) : null; })();
+    const n = h('section', 'card'); n.appendChild(cabecera('Comida · plan'));
     const l = h('div', 'lista');
-    l.appendChild(dato('Kcal medias', num(c.nutricion.kcal, 0), '', 'gris'));
-    l.appendChild(dato('Proteína', c.nutricion.proteina_g == null ? '·' : num(c.nutricion.proteina_g, 0) + ' g', 'meta 140', cProt));
-    n.appendChild(l); v.appendChild(n);
+    l.appendChild(dato('Kcal media prevista', kcal == null ? '·' : num(kcal, 0) + ' kcal/día'));
+    l.appendChild(dato('Proteína', nu.proteina_g == null ? '·' : num(nu.proteina_g, 0) + ' g/día'));
+    n.appendChild(l);
+    if (dias.length) {
+      const d = h('details', 'plan'); d.appendChild(h('summary', null, 'Según la carga del día'));
+      const ld = h('div', 'lista');
+      dias.forEach(x => ld.appendChild(dato(sinParentesis(x.tipo), x.kcal == null ? '·' : num(x.kcal, 0) + ' kcal',
+        `P ${num(x.proteina_g, 0)} · H ${num(x.hidratos_g, 0)} · G ${num(x.grasa_g, 0)} g`)));
+      d.appendChild(ld); n.appendChild(d);
+    }
+    v.appendChild(n);
   }
 
   const a = estado.ayunos.filter(x => x.horas != null && Number.isFinite(Number(x.horas))).slice(0, 7);
