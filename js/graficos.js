@@ -38,9 +38,12 @@ export function linea(serie, { meta = null, w = 320, h: hh = 96 } = {}) {
 const TONO = { verde: 'var(--verde)', ambar: 'var(--ambar)', rojo: 'var(--rojo)', gris: 'var(--muted)' };
 
 // Punto de estado (12 px). El color va por clase; el nombre del color, en aria-label.
-export function punto(color) {
+export function punto(color, decorativo = false) {
   const c = TONO[color] ? color : 'gris';
-  const e = h('span', 'punto ' + c); e.setAttribute('role', 'img'); e.setAttribute('aria-label', c === 'ambar' ? 'ámbar' : c); return e;
+  const e = h('span', 'punto ' + c);
+  if (decorativo) e.setAttribute('aria-hidden', 'true');   // el texto de al lado ya dice el color
+  else { e.setAttribute('role', 'img'); e.setAttribute('aria-label', c === 'ambar' ? 'ámbar' : c === 'gris' ? 'sin valoración' : c); }
+  return e;
 }
 
 // Semáforo vertical de tres luces: solo `color` encendida, las otras al 18 %. gris = las tres apagadas. tam = alto en px.

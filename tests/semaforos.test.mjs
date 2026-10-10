@@ -161,3 +161,41 @@ test('fraseCuerpo: el rojo por proteína no afirma que el peso sube', () => {
   assert.equal(S.fraseCuerpo('ambar', 'ambar'), 'Ajusta: el ritmo o la proteína no cuadran.');
   assert.equal(S.fraseCuerpo('gris', 'gris'), 'Sin datos suficientes esta semana.');
 });
+
+test('Semana en curso: el recuento solo avisa si ya pasa del máximo; si no, gris', () => {
+  assert.equal(S.colorRango(1, [2, 3], true), 'gris');
+  assert.equal(S.colorRango(2, [2, 3], true), 'gris');
+  assert.equal(S.colorRango(3, [2, 3], true), 'gris');
+  assert.equal(S.colorRango(4, [2, 3], true), 'ambar');
+  assert.equal(S.colorRango(1, [2, 3], false), 'ambar');   // semana pasada
+  assert.equal(S.colorRango(1, [2, 3]), 'ambar');
+  assert.equal(S.colorRango(null, [2, 3], true), 'gris');
+});
+
+test('colorSemana de la semana en curso', () => {
+  const base = { futura: false, actual: true, objetivo: { running: [2, 3], crossfit: [2, 3] }, running: 1, avisos: [] };
+  assert.equal(S.colorSemana(base), 'gris');
+  assert.equal(S.colorSemana({ ...base, running: 4 }), 'ambar');
+  assert.equal(S.colorSemana({ ...base, avisos: ['intensidad'] }), 'ambar');
+  assert.equal(S.colorSemana({ ...base, actual: false }), 'ambar');   // la misma semana ya cerrada
+});
+
+test('kmSemanaAnterior salta las semanas sin km (como el motor)', () => {
+  const sem = [{ lunes: 'a', km: 10 }, { lunes: 'b', km: 0 }, { lunes: 'c', km: 14 }];
+  assert.equal(S.kmSemanaAnterior(sem, sem[2]), 10);
+  assert.equal(S.colorVolumen(14, S.kmSemanaAnterior(sem, sem[2])), 'rojo');   // +40 %
+  assert.equal(S.kmSemanaAnterior(sem, sem[1]), 10);
+  const nulos = [{ lunes: 'a', km: null }, { lunes: 'b', km: 5 }];
+  assert.equal(S.kmSemanaAnterior(nulos, nulos[1]), null);
+});
+
+test('sintomasRecientes: nº de cierres con síntomas en la ventana, null si no hay cierres', () => {
+  const c = [{ fecha: '2026-10-05', enfermo: true }, { fecha: '2026-10-08', enfermo: false }, { fecha: '2026-10-09', enfermo: true }];
+  assert.equal(S.sintomasRecientes(c, '2026-10-08'), 1);
+  assert.equal(S.sintomasRecientes(c, '2026-10-06'), 1);
+  assert.equal(S.sintomasRecientes(c, '2026-10-10'), null);
+  assert.equal(S.sintomasRecientes([], '2026-10-08'), null);
+  assert.equal(S.sintomasRecientes(null, '2026-10-08'), null);
+  assert.equal(S.colorSintomas(S.sintomasRecientes(c, '2026-10-10')), 'gris');
+  assert.equal(S.colorSintomas(S.sintomasRecientes([{ fecha: '2026-10-09', enfermo: false }], '2026-10-08')), 'verde');
+});

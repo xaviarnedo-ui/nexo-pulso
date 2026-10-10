@@ -1,7 +1,7 @@
 import { h, num, diasAtras } from '../util.js';
 import { lineaFranja, punto } from '../graficos.js';
 import { dato, tarjetaSemaforo } from '../filas.js';
-import { colorHRV, colorFC, colorSueno, colorSintomas, colorSensacion, colorEstres, estadoFatiga, hayEnfermo } from '../semaforos.js';
+import { colorHRV, colorFC, colorSueno, colorSintomas, colorSensacion, colorEstres, estadoFatiga, hayEnfermo, sintomasRecientes } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 const signo = x => x == null ? '' : (x > 0 ? '+' : '') + num(x);
 
@@ -9,7 +9,7 @@ const media = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
 const numeros = a => a.filter(x => typeof x === 'number' && Number.isFinite(x));
 export function pintar(v, estado) {
   const r = estado.resumen; if (!r) return sinResumen(v, 'Fatiga'); const t = r.datos.fatiga;
-  const desde = diasAtras(2), enfermo = hayEnfermo(estado.cierres, desde);
+  const desde = diasAtras(2);
   const { estado: est, texto } = estadoFatiga(t, estado.cierres, desde);
   v.appendChild(h('h1', null, 'Fatiga'));
   v.appendChild(tarjetaSemaforo(est, texto));
@@ -29,7 +29,8 @@ export function pintar(v, estado) {
   ls.appendChild(dato('Sensación media', num(sens), '1–5', colorSensacion(sens)));
   ls.appendChild(dato('Estrés medio', num(estr), '1–5', colorEstres(estr)));
   ls.appendChild(dato('Días con molestia', String(sem.filter(x => x.molestia && x.molestia !== 'no').length), 'de ' + sem.length, 'gris'));
-  // El punto mira solo los últimos 2 días (E5); el número cuenta los 7.
-  ls.appendChild(dato('Días con síntomas', String(sem.filter(x => x.enfermo).length), 'de ' + sem.length, colorSintomas(estado.cierres.length ? (enfermo ? 1 : 0) : null)));
+  // Misma ventana que la regla E5 (2 días) para el número y el punto.
+  const sint = sintomasRecientes(estado.cierres, desde), n2 = estado.cierres.filter(x => x.fecha >= desde).length;
+  ls.appendChild(dato('Síntomas (2 días)', sint == null ? '·' : String(sint), sint == null ? '' : 'de ' + n2, colorSintomas(sint)));
   s.appendChild(ls); v.appendChild(s);
 }

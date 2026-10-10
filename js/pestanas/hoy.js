@@ -1,7 +1,7 @@
 import { guardarCierre, empezarAyuno, romperAyuno, guardarAjustes } from '../datos.js';
-import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, diasAtras } from '../util.js';
+import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, diasAtras, fmtFecha } from '../util.js';
 import { anillo, racha, punto } from '../graficos.js';
-import { estadoFatiga } from '../semaforos.js';
+import { estadoFatiga, hayEnfermo } from '../semaforos.js';
 
 const PREGUNTAS = [
   ['alcohol', 'Alcohol hoy', 'c3', [['0', '0'], ['1-2', '1–2'], ['3+', '3+']]],
@@ -111,11 +111,17 @@ function tarjetaCierre(estado, recargar, repintar) {
 const NOMBRE_ESTADO = { verde: 'verde', ambar: 'ámbar', rojo: 'rojo', gris: 'sin datos' };
 // Franja de estado: recuperación (la misma lógica que Fatiga, con el síntoma reciente en rojo; toca para ir a Fatiga) y cierre de hoy.
 function franjaEstado(estado, ir) {
-  const f = h('div', 'franja-estado');
-  const rec = estadoFatiga(estado.resumen && estado.resumen.datos.fatiga, estado.cierres, diasAtras(2)).estado;
-  const b = h('button'); b.type = 'button'; b.append(punto(rec), h('span', null, 'Recuperación: ' + NOMBRE_ESTADO[rec])); b.onclick = () => ir('fatiga');
+  const f = h('div', 'franja-estado'), r = estado.resumen;
+  const desde = diasAtras(2), vivo = hayEnfermo(estado.cierres, desde);
+  const rec = estadoFatiga(r && r.datos.fatiga, estado.cierres, desde).estado;
+  // Con el síntoma de un cierre reciente se dice por qué; si no, de qué día son los datos.
+  const detalle = vivo ? ' · síntomas' : r && r.datos_hasta ? ' · datos del ' + fmtFecha(r.datos_hasta).replace(/^[^,\s]+,?\s*/, '') : '';
+  const b = h('button'); b.type = 'button';
+  const p1 = punto(rec, true);
+  b.append(p1, h('span', null, 'Recuperación: ' + NOMBRE_ESTADO[rec] + detalle)); b.onclick = () => ir('fatiga');
   const hecho = estado.cierres.some(x => x.fecha === fechaCierre());
-  const c = h('div'); c.append(punto(hecho ? 'verde' : 'ambar'), h('span', null, 'Cierre de hoy: ' + (hecho ? 'hecho' : 'pendiente')));
+  const p2 = punto(hecho ? 'verde' : 'ambar', true);
+  const c = h('div'); c.append(p2, h('span', null, 'Cierre de hoy: ' + (hecho ? 'hecho' : 'pendiente')));
   f.append(b, c); return f;
 }
 

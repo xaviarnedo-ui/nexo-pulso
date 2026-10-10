@@ -16,7 +16,7 @@ export function pintar(v, estado) {
   const act = sem.find(s => s.actual) || [...sem].reverse().find(s => !s.futura);
   const prev = act ? kmSemanaAnterior(sem, act) : null;
   const colores = act ? {
-    running: colorRango(act.running, act.objetivo && act.objetivo.running), crossfit: colorRango(act.crossfit, act.objetivo && act.objetivo.crossfit),
+    running: colorRango(act.running, act.objetivo && act.objetivo.running, act.actual), crossfit: colorRango(act.crossfit, act.objetivo && act.objetivo.crossfit, act.actual),
     facil: colorFacil(act.facil_pct), volumen: colorVolumen(act.km, prev) } : {};
   v.appendChild(h('h1', null, 'Carrera'));
   const global = act ? peor([...Object.values(colores), colorSemana(act)]) : 'gris';

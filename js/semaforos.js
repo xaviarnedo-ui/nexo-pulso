@@ -37,8 +37,10 @@ export function colorSueno(pct) {
   if (!hay(pct)) return 'gris';
   return pct >= SUENO_VERDE - EPS ? 'verde' : pct >= SUENO_AMBAR - EPS ? 'ambar' : 'rojo';
 }
-export function colorRango(n, rango) {
+// enCurso: la semana aún no ha acabado (el motor no juzga el recuento hasta cerrarla): solo avisa si ya se pasa del máximo.
+export function colorRango(n, rango, enCurso = false) {
   if (!hay(n) || !Array.isArray(rango) || !hay(rango[0]) || !hay(rango[1])) return 'gris';
+  if (enCurso) return n > rango[1] ? 'ambar' : 'gris';
   return n >= rango[0] && n <= rango[1] ? 'verde' : 'ambar';
 }
 export function colorFacil(pct) {
@@ -88,17 +90,23 @@ export function peor(colores) {
 export function colorSemana(s) {
   if (!s || s.futura) return 'gris';
   if ((s.avisos || []).length) return 'ambar';
-  return s.objetivo ? colorRango(s.running, s.objetivo.running) : 'gris';
+  return s.objetivo ? colorRango(s.running, s.objetivo.running, !!s.actual) : 'gris';
 }
-// Km de la última semana no futura anterior a `s` (para el +30 %). null si no hay.
+// Km de la última semana anterior a `s` con carreras (para el +30 %): como el motor, las semanas sin km no cuentan. null si no hay.
 export function kmSemanaAnterior(semanas, s) {
   const lista = semanas || [], i = lista.findIndex(x => x.lunes === s.lunes);
-  for (let j = (i < 0 ? lista.length : i) - 1; j >= 0; j--) if (!lista[j].futura) return hay(lista[j].km) ? lista[j].km : null;
+  for (let j = (i < 0 ? lista.length : i) - 1; j >= 0; j--) if (!lista[j].futura && hay(lista[j].km) && lista[j].km > 0) return lista[j].km;
   return null;
 }
 
 // Síntomas marcados en los cierres desde `desde` (AAAA-MM-DD) en adelante.
 export function hayEnfermo(cierres, desde) { return (cierres || []).some(x => x.fecha >= desde && x.enfermo); }
+
+// Cierres con síntomas desde `desde`; null si no hay ningún cierre en esa ventana (nada que juzgar).
+export function sintomasRecientes(cierres, desde) {
+  const v = (cierres || []).filter(x => x.fecha >= desde);
+  return v.length ? v.filter(x => x.enfermo).length : null;
+}
 
 export const FRASE_SIN_DATOS = 'Sin datos suficientes esta semana.';
 export const TEXTO_ENFERMO = 'Has marcado síntomas: descanso o algo muy suave (E5).';
