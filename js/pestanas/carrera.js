@@ -1,6 +1,6 @@
 import { h, num, fmtFecha, isoDia } from '../util.js';
 import { barras } from '../graficos.js';
-import { dato, tarjetaSemaforo } from '../filas.js';
+import { dato, tarjetaEstado } from '../filas.js';
 import { colorRango, colorFacil, colorVolumen, colorSemana, kmSemanaAnterior, peor, frase } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 
@@ -20,7 +20,7 @@ export function pintar(v, estado) {
     facil: colorFacil(act.facil_pct), volumen: colorVolumen(act.km, prev) } : {};
   v.appendChild(h('h1', null, 'Carrera'));
   const global = act ? peor([...Object.values(colores), colorSemana(act)]) : 'gris';
-  v.appendChild(tarjetaSemaforo(global, frase('carrera', global)));
+  v.appendChild(tarjetaEstado(global, frase('carrera', global)));
   const top = h('section', 'card'); const e = h('div', 'entre');
   const i = h('div'); i.appendChild(h('div', 'lbl', c.carrera));
   // Días de calendario (medianoche local a mediodía local): con UTC la cuenta se queda corta de noche.

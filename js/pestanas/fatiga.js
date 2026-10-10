@@ -1,6 +1,6 @@
 import { h, num, diasAtras } from '../util.js';
 import { lineaFranja, punto } from '../graficos.js';
-import { dato, tarjetaSemaforo } from '../filas.js';
+import { dato, tarjetaEstado } from '../filas.js';
 import { colorHRV, colorFC, colorSueno, colorSintomas, colorSensacion, colorEstres, estadoFatiga, hayEnfermo, sintomasRecientes } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 const signo = x => x == null ? '' : (x > 0 ? '+' : '') + num(x);
@@ -12,7 +12,7 @@ export function pintar(v, estado) {
   const desde = diasAtras(2);
   const { estado: est, texto } = estadoFatiga(t, estado.cierres, desde);
   v.appendChild(h('h1', null, 'Fatiga'));
-  v.appendChild(tarjetaSemaforo(est, texto));
+  v.appendChild(tarjetaEstado(est, texto));
   const serie = ((t.hrv && t.hrv.serie) || []).filter(p => p.hrv7 != null);
   const fr = t.fc_reposo || {};
   const g = h('section', 'card'); const cab = h('div', 'entre fila-ind'); cab.append(punto(colorHRV(t.hrv_bajo, fr.sobre_base)), h('h2', 'etq', 'HRV 7 días'), h('span', 'cifra', serie.length ? num(serie[serie.length - 1].hrv7, 0) + ' ms' : '·')); g.appendChild(cab);

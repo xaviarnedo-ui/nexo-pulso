@@ -46,15 +46,13 @@ export function punto(color, decorativo = false) {
   return e;
 }
 
-// Semáforo vertical de tres luces: solo `color` encendida, las otras al 18 %. gris = las tres apagadas. tam = alto en px.
-export function semaforo(color, tam = 56) {
-  const W = 44, H = 100, s = el('svg', { viewBox: `0 0 ${W} ${H}`, width: Math.round(tam * W / H), height: tam, class: 'semaforo-svg', role: 'img', 'aria-label': 'Semáforo: ' + (color === 'ambar' ? 'ámbar' : color === 'gris' || !TONO[color] ? 'sin datos' : color) });
-  el('rect', { x: 1, y: 1, width: W - 2, height: H - 2, rx: 12, fill: 'var(--surface-2)', stroke: 'var(--line)', 'stroke-width': 1.5 }, s);
-  ['rojo', 'ambar', 'verde'].forEach((c, i) => {
-    const cy = 19 + i * 31, enc = c === color;
-    if (enc) el('circle', { cx: W / 2, cy, r: 16, fill: TONO[c], opacity: 0.22 }, s);
-    el('circle', { cx: W / 2, cy, r: 11.5, fill: TONO[c], opacity: enc ? 1 : 0.18 }, s);
-  });
+// Insignia de estado: círculo de color con un glifo blanco (verde ✓, ámbar !, rojo ×, gris –). tam = diámetro en px.
+const GLIFO = { verde: 'M7 12.5l3.2 3.2L17 8.6', ambar: 'M12 6.5v7M12 17.4v.1', rojo: 'M8 8l8 8M16 8l-8 8', gris: 'M7.5 12h9' };
+export function insignia(color, tam = 44) {
+  const c = TONO[color] ? color : 'gris';
+  const s = el('svg', { viewBox: '0 0 24 24', width: tam, height: tam, class: 'insignia ' + c, role: 'img', 'aria-label': 'Estado: ' + (c === 'ambar' ? 'ámbar' : c === 'gris' ? 'sin datos' : c) });
+  el('circle', { cx: 12, cy: 12, r: 12, class: 'insignia-fondo' }, s);
+  el('path', { d: GLIFO[c], class: 'insignia-glifo', fill: 'none', 'stroke-width': 2.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, s);
   return s;
 }
 

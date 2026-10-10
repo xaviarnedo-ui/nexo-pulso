@@ -1,6 +1,6 @@
 import { h, num, fmtFecha } from '../util.js';
 import { linea } from '../graficos.js';
-import { dato, tarjetaSemaforo } from '../filas.js';
+import { dato, tarjetaEstado } from '../filas.js';
 import { colorRitmoPeso, colorProteina, peor, fraseCuerpo } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 const signo = (x, dec = 1) => x == null ? '' : (x > 0 ? '+' : '') + num(x, dec);
@@ -10,7 +10,7 @@ export function pintar(v, estado) {
   const cRitmo = colorRitmoPeso(c.ritmo_kg_sem), cProt = colorProteina(c.nutricion && c.nutricion.proteina_g);
   const global = peor([cRitmo, cProt]);
   v.appendChild(h('h1', null, 'Cuerpo'));
-  v.appendChild(tarjetaSemaforo(global, fraseCuerpo(global, cRitmo)));
+  v.appendChild(tarjetaEstado(global, fraseCuerpo(global, cRitmo)));
   if (c.peso) {
     const p = h('section', 'card'); const e = h('div', 'entre');
     const i = h('div'); i.appendChild(h('div', 'lbl', 'Peso medio de la semana')); i.appendChild(h('div', 'cifra grande', num(c.peso.media)));

@@ -1,6 +1,6 @@
 /* NEXO Pulso: caché de la interfaz (sin datos) y notificaciones push. */
-const CACHE = 'pulso-v3';
-const BASE = ['./', 'index.html', 'styles.css?v=3', 'js/app.js?v=3', 'manifest.json', 'icons/icon-192.png'];
+const CACHE = 'pulso-v4';
+const BASE = ['./', 'index.html', 'styles.css?v=4', 'js/app.js?v=4', 'manifest.json', 'icons/icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(n => n !== CACHE).map(n => caches.delete(n))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {

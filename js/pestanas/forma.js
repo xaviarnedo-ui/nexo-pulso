@@ -1,6 +1,6 @@
 import { h, num } from '../util.js';
 import { linea } from '../graficos.js';
-import { dato, tarjetaSemaforo } from '../filas.js';
+import { dato, tarjetaEstado } from '../filas.js';
 import { colorIndice, peor, frase } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 const signo = x => x == null ? '' : (x > 0 ? '+' : '') + num(x);
@@ -11,7 +11,7 @@ export function pintar(v, estado) {
   const pilares = f.pilares || [];
   v.appendChild(h('h1', null, 'Forma'));
   const global = peor([colorIndice(f.indice), ...pilares.map(p => colorIndice(p.valor))]);
-  v.appendChild(tarjetaSemaforo(global, frase('forma', global)));
+  v.appendChild(tarjetaEstado(global, frase('forma', global)));
   const c = h('section', 'card'); const top = h('div', 'entre');
   const izq = h('div'); izq.appendChild(h('div', 'lbl', 'Índice de forma')); izq.appendChild(h('div', 'cifra grande', num(f.indice)));
   const der = h('div'); der.style.textAlign = 'right'; der.appendChild(h('div', 'cifra media ' + (f.cambio > 0 ? 'sube' : f.cambio < 0 ? 'baja' : ''), signo(f.cambio))); der.appendChild(h('div', 'pie', 'frente a la semana anterior'));

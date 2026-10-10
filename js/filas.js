@@ -1,5 +1,5 @@
 import { h } from './util.js';
-import { punto, semaforo } from './graficos.js';
+import { punto, insignia } from './graficos.js';
 
 const NOMBRE = { verde: 'Verde', ambar: 'Ámbar', rojo: 'Rojo', gris: 'Sin datos' };
 
@@ -13,10 +13,10 @@ export function dato(etq, valor, extra, color, cls) {
   e.appendChild(s); return e;
 }
 
-// Semáforo grande de la pestaña: las luces a la izquierda y una frase en negrita a la derecha.
-export function tarjetaSemaforo(color, texto) {
-  const c = h('section', 'card semaforo'); c.dataset.color = color;
-  c.appendChild(semaforo(color, 92));
-  const d = h('div', 'crece'); d.appendChild(h('div', 'semaforo-estado', NOMBRE[color] || NOMBRE.gris)); d.appendChild(h('div', 'semaforo-frase', texto));
+// Tarjeta de estado de la pestaña: insignia de color a la izquierda; palabra del estado y frase en negrita a la derecha.
+export function tarjetaEstado(color, texto) {
+  const c = h('section', 'card estado-card'); c.dataset.color = NOMBRE[color] ? color : 'gris';
+  c.appendChild(insignia(color, 44));
+  const d = h('div', 'crece'); d.appendChild(h('div', 'estado-nombre', NOMBRE[color] || NOMBRE.gris)); d.appendChild(h('div', 'estado-frase', texto));
   c.appendChild(d); return c;
 }

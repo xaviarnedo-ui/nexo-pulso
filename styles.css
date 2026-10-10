@@ -3,12 +3,12 @@
   --accent: #1E5F58; --accent-soft: #DBE6E1; --warm: #AF6038;
   --verde: #2E7D5B; --verde-soft: #DCEFE4; --ambar: #A86B12; --ambar-soft: #F6E8CF; --rojo: #B23B3B; --rojo-soft: #F6DCDC;
   --sans: "Hanken Grotesk", -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --r: 14px; --tabs-h: 64px; color-scheme: light;
+  --r: 14px; --tabs-h: 64px; --sobre-color: #FFFFFF; color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #121614; --surface: #1A201D; --surface-2: #202723; --ink: #E7EAE4; --muted: #93A099; --line: #2B342F;
     --accent: #55B7A9; --accent-soft: #1E2D2A; --warm: #D5875B;
-    --verde: #5CC28F; --verde-soft: #1C2E25; --ambar: #E0A646; --ambar-soft: #33291A; --rojo: #E57373; --rojo-soft: #3A2222; color-scheme: dark; }
+    --verde: #5CC28F; --verde-soft: #1C2E25; --ambar: #E0A646; --ambar-soft: #33291A; --rojo: #E57373; --rojo-soft: #3A2222; --sobre-color: #121614; color-scheme: dark; }
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 var(--sans); -webkit-text-size-adjust: 100%; }
@@ -62,14 +62,16 @@ input[type=time], input[type=text], input[type=email], input[type=password], inp
 .punto.verde { background: var(--verde); } .punto.ambar { background: var(--ambar); } .punto.rojo { background: var(--rojo); }
 .punto.gris { background: transparent; box-shadow: inset 0 0 0 2px var(--muted); opacity: .6; }
 .fila-ind { align-items: center; } .fila-ind .etq { flex: 1 1 0; min-width: 56px; } .fila-ind .cifra { flex: 0 1 auto; text-align: right; }
-.semaforo { flex-direction: row; align-items: center; gap: 16px; padding: 16px; }
-.semaforo > .crece { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.semaforo-svg { flex: none; display: block; }
-.semaforo-estado { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.semaforo-frase { font-size: 20px; line-height: 1.25; font-weight: 600; letter-spacing: -.01em; }
-.semaforo[data-color="verde"] { background: var(--verde-soft); border-color: var(--verde); } .semaforo[data-color="verde"] .semaforo-estado { color: var(--verde); }
-.semaforo[data-color="ambar"] { background: var(--ambar-soft); border-color: var(--ambar); } .semaforo[data-color="ambar"] .semaforo-estado { color: var(--ambar); }
-.semaforo[data-color="rojo"] { background: var(--rojo-soft); border-color: var(--rojo); } .semaforo[data-color="rojo"] .semaforo-estado { color: var(--rojo); }
+.estado-card { flex-direction: row; align-items: center; gap: 16px; padding: 16px; }
+.estado-card > .crece { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.insignia { flex: none; display: block; }
+.insignia-fondo { fill: var(--muted); } .insignia-glifo { stroke: var(--sobre-color); }
+.insignia.verde .insignia-fondo { fill: var(--verde); } .insignia.ambar .insignia-fondo { fill: var(--ambar); } .insignia.rojo .insignia-fondo { fill: var(--rojo); }
+.estado-nombre { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.estado-frase { font-size: 20px; line-height: 1.25; font-weight: 600; letter-spacing: -.01em; }
+.estado-card[data-color="verde"] { background: var(--verde-soft); border-color: var(--verde); } .estado-card[data-color="verde"] .estado-nombre { color: var(--verde); }
+.estado-card[data-color="ambar"] { background: var(--ambar-soft); border-color: var(--ambar); } .estado-card[data-color="ambar"] .estado-nombre { color: var(--ambar); }
+.estado-card[data-color="rojo"] { background: var(--rojo-soft); border-color: var(--rojo); } .estado-card[data-color="rojo"] .estado-nombre { color: var(--rojo); }
 .franja-estado { display: flex; flex-wrap: wrap; gap: 8px; }
 .franja-estado > * { flex: 1 1 auto; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; }
 .franja-estado button { cursor: pointer; }
