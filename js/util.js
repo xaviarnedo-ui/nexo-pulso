@@ -21,3 +21,5 @@ export const conSigno = (x, dec = 1) => { if (x == null || isNaN(x)) return ''; 
 export const esCero = (x, dec = 1) => x != null && !isNaN(x) && Number(Number(x).toFixed(dec)) === 0;
 // "9 nov" (sin día de la semana).
 export const fechaCorta = s => new Date(s + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).replace('.', '');
+// Porcentaje en una pieza: espacio fino que no se parte ("86 %"); en mono un espacio normal deja un hueco de un carácter entero.
+export const pct = (x, dec = 0) => (typeof x === 'string' ? x : num(x, dec)) + '\u202f%';

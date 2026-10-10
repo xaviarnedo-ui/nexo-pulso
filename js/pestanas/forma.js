@@ -1,4 +1,4 @@
-import { h, num, conSigno, esCero, limpia } from '../util.js';
+import { h, num, conSigno, esCero, limpia, pct } from '../util.js';
 import { linea } from '../graficos.js';
 import { dato, tarjetaEstado, cabecera, heroe, cambio, tesela } from '../filas.js';
 import { colorIndice, peor, frase } from '../semaforos.js';
@@ -9,13 +9,24 @@ const NOMBRE = { aerobico: 'Aeróbico', fuerza: 'Fuerza', composicion: 'Composic
 const CORTO = { '% de grasa corporal': '% grasa' };
 const corto = s => { const t = limpia(s).split(' · ')[0]; return CORTO[t] || t; };
 const tono = x => x > 0 ? 'sube' : x < 0 ? 'baja' : '';
+const GRAV = { verde: 1, ambar: 2, rojo: 3 };
+const PREFIJO = { verde: 'Índice en tu base', ambar: 'Índice algo por debajo', rojo: 'Índice por debajo' };
+// Frase del estado: si el color peor no sale del índice sino de algún pilar, se dice cuál ("Índice en tu base; aeróbico, algo por debajo.").
+function fraseForma(indice, pilares, global) {
+  const ci = colorIndice(indice), gi = GRAV[ci] || 0;
+  const bajan = pilares.filter(p => (GRAV[colorIndice(p.valor)] || 0) > gi).map(p => (NOMBRE[p.nombre] || p.nombre).toLowerCase());
+  if (!bajan.length || (global !== 'ambar' && global !== 'rojo')) return frase('forma', global);
+  const quien = bajan.length > 1 ? bajan.slice(0, -1).join(', ') + ' y ' + bajan[bajan.length - 1] : bajan[0];
+  const pre = PREFIJO[ci] || 'Índice sin datos';
+  return global === 'rojo' ? `${pre}; ${quien}, por debajo: prioriza recuperar.` : `${pre}; ${quien}, algo por debajo.`;
+}
 
 export function pintar(v, estado) {
   const r = estado.resumen; if (!r) return sinResumen(v, 'Forma'); const f = r.datos.forma;
   const pilares = f.pilares || [];
   v.appendChild(h('h1', null, 'Forma'));
   const global = peor([colorIndice(f.indice), ...pilares.map(p => colorIndice(p.valor))]);
-  v.appendChild(tarjetaEstado(global, frase('forma', global)));
+  v.appendChild(tarjetaEstado(global, fraseForma(f.indice, pilares, global)));
 
   const c = h('section', 'card');
   const pill = f.cambio == null || esCero(f.cambio) ? null : cambio(conSigno(f.cambio), tono(f.cambio));
@@ -43,7 +54,7 @@ export function pintar(v, estado) {
     // Todo en escala "mejor que" (% de la población por debajo de ti); la banda clara de la barra es el rango.
     const l = h('div', 'lista');
     f.poblacion.forEach(x => { const m = x.mejor_que ?? x.percentil;
-      const fila = dato(corto(x.nombre), m == null ? '·' : 'mejor que ' + Math.round(m) + ' %');
+      const fila = dato(corto(x.nombre), m == null ? '·' : 'mejor que ' + pct(Math.round(m)));
       const b = h('div', 'barra'); const s = h('span'); s.style.width = (m == null ? 0 : m) + '%';
       if (x.rango) { const banda = h('i'); banda.style.left = x.rango[0] + '%'; banda.style.width = (x.rango[1] - x.rango[0]) + '%'; b.appendChild(banda); }
       b.appendChild(s);

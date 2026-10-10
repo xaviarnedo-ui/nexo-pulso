@@ -1,4 +1,4 @@
-import { h, num, fmtFecha, fechaCorta, isoDia, limpia } from '../util.js';
+import { h, num, fmtFecha, fechaCorta, isoDia, limpia, pct } from '../util.js';
 import { barras } from '../graficos.js';
 import { dato, tarjetaEstado, cabecera, heroe } from '../filas.js';
 import { colorRango, colorFacil, colorVolumen, colorSemana, kmSemanaAnterior, peor, frase } from '../semaforos.js';
@@ -73,7 +73,7 @@ export function pintar(v, estado) {
     l.appendChild(dato('Km', num(act.km, 0), dif == null ? '' : (dif > 0 ? '+' : dif < 0 ? '−' : '') + Math.abs(dif) + ' % sobre la anterior', colores.volumen));
     if (act.tirada_km) l.appendChild(dato('Tirada larga', num(act.tirada_km) + ' km', '', 'gris'));
     l.appendChild(dato('CrossFit', ent(act.crossfit), act.objetivo ? 'previstos ' + rango(act.objetivo.crossfit) : '', colores.crossfit));
-    if (act.facil_pct != null) l.appendChild(dato('% fácil', act.facil_pct + ' %', '', colores.facil));
+    if (act.facil_pct != null) l.appendChild(dato('% fácil', pct(act.facil_pct), '', colores.facil));
     k.appendChild(l); (act.avisos || []).filter(a => !AV_CON_FILA.has(a)).forEach(a => k.appendChild(h('div', 'estado-pill ambar', limpia(a)))); v.appendChild(k);
   }
 

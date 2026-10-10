@@ -1,4 +1,4 @@
-import { h, num, conSigno, esCero, fechaCorta } from '../util.js';
+import { h, num, conSigno, esCero, fechaCorta, pct } from '../util.js';
 import { linea } from '../graficos.js';
 import { dato, tarjetaEstado, cabecera, heroe } from '../filas.js';
 import { colorRitmoPeso, colorProteina, peor, fraseCuerpo } from '../semaforos.js';
@@ -20,7 +20,7 @@ export function pintar(v, estado) {
     if (c.meta) p.appendChild(h('div', 'pie', 'Meta ' + num(c.meta) + ' kg' + (c.fecha_estimada ? ' · ~' + fechaCorta(c.fecha_estimada) : '')));
     const l = h('div', 'lista');
     if (c.ritmo_kg_sem != null) l.appendChild(dato('Tendencia', conSigno(c.ritmo_kg_sem, 2) + ' kg/sem', 'meta −0,3 a −0,6', cRitmo));
-    if (c.grasa_pct && c.grasa_pct.media != null) l.appendChild(dato('% grasa', num(c.grasa_pct.media) + ' %', c.grasa_pct.cambio == null || esCero(c.grasa_pct.cambio) ? '' : conSigno(c.grasa_pct.cambio) + ' esta semana', 'gris'));
+    if (c.grasa_pct && c.grasa_pct.media != null) l.appendChild(dato('% grasa', pct(c.grasa_pct.media, 1), c.grasa_pct.cambio == null || esCero(c.grasa_pct.cambio) ? '' : conSigno(c.grasa_pct.cambio) + ' esta semana', 'gris'));
     if (l.children.length) p.appendChild(l);
     v.appendChild(p);
   }
