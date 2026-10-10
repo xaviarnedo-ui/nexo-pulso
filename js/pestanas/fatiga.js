@@ -6,6 +6,7 @@ const signo = x => x == null ? '' : (x > 0 ? '+' : '') + num(x);
 
 const COLOR = { verde: 'var(--verde)', ambar: 'var(--ambar)', rojo: 'var(--rojo)' }, NOMBRE = { verde: 'Verde', ambar: 'Ámbar', rojo: 'Rojo' };
 const media = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+const numeros = a => a.filter(x => typeof x === 'number' && Number.isFinite(x));
 export function pintar(v, estado) {
   const r = estado.resumen; if (!r) return sinResumen(v, 'Fatiga'); const t = r.datos.fatiga;
   const recientes = estado.cierres.filter(x => x.fecha >= diasAtras(2));
@@ -19,13 +20,14 @@ export function pintar(v, estado) {
   // lo/hi pueden ser null (sin franja): Number(null) valdría 0 y pintaría la banda hasta cero.
   g.appendChild(lineaFranja(t.hrv.serie.filter(p => p.hrv7 != null).map(p => ({ y: Number(p.hrv7), lo: p.lo == null ? null : Number(p.lo), hi: p.hi == null ? null : Number(p.hi) })))); v.appendChild(g);
   const l = h('section', 'card'); const li = h('div', 'lista');
-  if (t.fc_reposo.valor != null) li.appendChild(dato('FC en reposo', num(t.fc_reposo.valor, 0), `base ${num(t.fc_reposo.base, 0)} (${signo(t.fc_reposo.sobre_base)})`, t.fc_reposo.sobre_base >= 3 ? 'baja' : ''));
+  if (t.fc_reposo.valor != null) { const fr = t.fc_reposo; const extra = fr.base == null ? '' : `base ${num(fr.base, 0)}` + (fr.sobre_base == null ? '' : ` (${signo(fr.sobre_base)})`);
+    li.appendChild(dato('FC en reposo', num(fr.valor, 0), extra, fr.sobre_base >= 3 ? 'baja' : '')); }
   if (t.sueno_pct != null) li.appendChild(dato('Sueño frente a tu necesidad', t.sueno_pct + ' %', '7 días'));
   if (t.carga) li.appendChild(dato('Carga (strain) 7 días', num(t.carga.semana, 0), `media de 4 semanas ${num(t.carga.media_4, 0)}`));
   l.appendChild(li); v.appendChild(l);
   const s = h('section', 'card'); s.appendChild(h('h2', null, 'Cómo te sientes (tus cierres de 7 días)')); const ls = h('div', 'lista'); const sem = estado.cierres.filter(x => x.fecha >= diasAtras(6));
-  ls.appendChild(dato('Sensación media', num(media(sem.map(x => x.sensacion))), '1–5'));
-  ls.appendChild(dato('Estrés medio', num(media(sem.map(x => x.estres))), '1–5'));
+  ls.appendChild(dato('Sensación media', num(media(numeros(sem.map(x => x.sensacion)))), '1–5'));
+  ls.appendChild(dato('Estrés medio', num(media(numeros(sem.map(x => x.estres)))), '1–5'));
   ls.appendChild(dato('Días con molestia', String(sem.filter(x => x.molestia && x.molestia !== 'no').length), 'de ' + sem.length));
   ls.appendChild(dato('Días con síntomas', String(sem.filter(x => x.enfermo).length), 'de ' + sem.length));
   s.appendChild(ls); v.appendChild(s);

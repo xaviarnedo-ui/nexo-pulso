@@ -5,7 +5,9 @@ function dato(etq, valor, extra, cls) { const e = h('div', 'entre'); e.appendChi
 
 const AV = { running: 'nº de carreras fuera de lo previsto', crossfit: 'nº de CrossFit fuera de lo previsto', volumen: 'km +30 % sobre la semana anterior (R1)', intensidad: 'menos del 70 % del tiempo fácil (E2)' };
 export function pintar(v, estado) {
-  const r = estado.resumen; if (!r || !r.datos.carrera) return sinResumen(v, 'Carrera'); const c = r.datos.carrera;
+  const r = estado.resumen; if (!r) return sinResumen(v, 'Carrera');
+  if (!r.datos.carrera) { v.appendChild(h('h1', null, 'Carrera')); v.appendChild(h('section', 'card', 'Sin objetivo de carrera en el resumen.')); return; }
+  const c = r.datos.carrera;
   v.appendChild(h('h1', null, 'Carrera'));
   const top = h('section', 'card'); const e = h('div', 'entre');
   const i = h('div'); i.appendChild(h('div', 'lbl', c.carrera));
