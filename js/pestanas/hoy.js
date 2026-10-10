@@ -1,6 +1,7 @@
 import { guardarCierre, empezarAyuno, romperAyuno, guardarAjustes } from '../datos.js';
-import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, diasAtras, fmtFecha } from '../util.js';
+import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, diasAtras, fechaCorta, breve } from '../util.js';
 import { anillo, racha, punto } from '../graficos.js';
+import { cabecera } from '../filas.js';
 import { estadoFatiga, hayEnfermo } from '../semaforos.js';
 
 const PREGUNTAS = [
@@ -31,9 +32,9 @@ function tarjetaAyuno(v, estado, recargar) {
   const fila = h('div', 'fila'); const info = h('div', 'crece'); const caja = h('div');
   dibujaAnillo(caja, a);
   fila.appendChild(caja);
-  info.appendChild(h('h2', null, a ? 'Ayuno en curso' : 'Sin ayuno en curso'));
+  info.appendChild(h('div', 'destacado', a ? 'Ayuno en curso' : 'Sin ayuno en curso'));
   info.appendChild(h('div', 'lbl', a ? 'desde las ' + a.inicio.slice(11) + (a.inicio.slice(0, 10) !== isoDia(new Date()) ? ' de ayer' : '') : 'Empieza al guardar el cierre o a mano.'));
-  const media = estado.ayunos.slice(0, 7); if (media.length) info.appendChild(h('div', 'pie', 'Media de tus 7 últimos: ' + num(media.reduce((s, x) => s + Number(x.horas), 0) / media.length) + ' h'));
+  const media = estado.ayunos.slice(0, 7); if (media.length) info.appendChild(h('div', 'pie', 'Media ' + media.length + ' últimos: ' + num(media.reduce((s, x) => s + Number(x.horas), 0) / media.length) + ' h'));
   fila.appendChild(info); c.appendChild(fila);
   const hora = h('input'); hora.type = 'time'; hora.value = ahoraHHMM(); hora.oninput = () => { horaTocada = true; };
   const q = h('div', 'q'); q.appendChild(h('span', 't', a ? 'Hora de la primera comida' : 'Hora de la última comida')); q.appendChild(hora);
@@ -65,12 +66,12 @@ function tarjetaCierre(estado, recargar, repintar) {
   const fecha = fechaCierre(); const hoy = estado.cierres.find(x => x.fecha === fecha);
   // Un formulario a medias de otro día (corte de las 05:00) no se reutiliza.
   if (form && formFecha !== fecha) { form = null; formFecha = null; editando = false; }
-  const c = h('section', 'card'); c.appendChild(h('h2', null, 'Cierre del día'));
+  const c = h('section', 'card'); c.appendChild(cabecera('Cierre del día'));
   if (hoy && !editando) {
     const ch = h('div', 'chips');
     [['Alcohol', hoy.alcohol], ['Café tarde', hoy.cafeina_tarde ? 'sí' : 'no'], ['Última comida', hoy.ultima_comida], ['Balance', ETIQ[hoy.balance] || '—'],
      ['Estrés', hoy.estres], ['Sensación', hoy.sensacion], ['Esfuerzo', hoy.rpe == null ? 'sin sesión' : hoy.rpe],
-     ['Molestia', hoy.molestia + (hoy.molestia_zona ? ' (' + hoy.molestia_zona + ')' : '')], ['Enfermo', hoy.enfermo ? 'sí' : 'no']]
+     ['Molestia', hoy.molestia + (hoy.molestia_zona ? ' · ' + hoy.molestia_zona : '')], ['Enfermo', hoy.enfermo ? 'sí' : 'no']]
       .forEach(([k, val]) => ch.appendChild(h('span', 'chip', k + ': ' + val)));
     const e = h('button', 'btn', 'Editar'); e.onclick = () => { editando = true; form = null; formFecha = null; repintar(); };
     c.appendChild(ch); c.appendChild(e); return c;
@@ -108,21 +109,21 @@ function tarjetaCierre(estado, recargar, repintar) {
   c.appendChild(guardar); c.appendChild(m); return c;
 }
 
-const NOMBRE_ESTADO = { verde: 'verde', ambar: 'ámbar', rojo: 'rojo', gris: 'sin datos' };
-// Franja de estado: recuperación (la misma lógica que Fatiga, con el síntoma reciente en rojo; toca para ir a Fatiga) y cierre de hoy.
+const NOMBRE_ESTADO = { verde: 'verde', ambar: 'ámbar', rojo: 'roja', gris: 'sin datos' };
+// Franja de estado: dos pastillas (recuperación, con la misma lógica que Fatiga; toca para ir a Fatiga · cierre de hoy)
+// y, debajo, en pequeño, de qué día son los datos (o que el rojo viene de los síntomas de un cierre reciente).
 function franjaEstado(estado, ir) {
-  const f = h('div', 'franja-estado'), r = estado.resumen;
+  const caja = h('div', 'franja'), f = h('div', 'franja-estado'), r = estado.resumen;
   const desde = diasAtras(2), vivo = hayEnfermo(estado.cierres, desde);
   const rec = estadoFatiga(r && r.datos.fatiga, estado.cierres, desde).estado;
-  // Con el síntoma de un cierre reciente se dice por qué; si no, de qué día son los datos.
-  const detalle = vivo ? ' · síntomas' : r && r.datos_hasta ? ' · datos del ' + fmtFecha(r.datos_hasta).replace(/^[^,\s]+,?\s*/, '') : '';
-  const b = h('button'); b.type = 'button';
-  const p1 = punto(rec, true);
-  b.append(p1, h('span', null, 'Recuperación: ' + NOMBRE_ESTADO[rec] + detalle)); b.onclick = () => ir('fatiga');
+  const b = h('button'); b.type = 'button'; b.setAttribute('aria-label', 'Recuperación ' + NOMBRE_ESTADO[rec] + '. Ver Fatiga');
+  b.append(punto(rec, true), h('span', null, 'Recuperación ' + NOMBRE_ESTADO[rec])); b.onclick = () => ir('fatiga');
   const hecho = estado.cierres.some(x => x.fecha === fechaCierre());
-  const p2 = punto(hecho ? 'verde' : 'ambar', true);
-  const c = h('div'); c.append(p2, h('span', null, 'Cierre de hoy: ' + (hecho ? 'hecho' : 'pendiente')));
-  f.append(b, c); return f;
+  const c = h('div'); c.append(punto(hecho ? 'verde' : 'ambar', true), h('span', null, 'Cierre ' + (hecho ? 'hecho' : 'pendiente')));
+  f.append(b, c); caja.appendChild(f);
+  const pie = [vivo ? 'Síntomas en un cierre reciente' : '', r && r.datos_hasta ? 'datos del ' + fechaCorta(r.datos_hasta) : ''].filter(Boolean).join(' · ');
+  if (pie) caja.appendChild(h('div', 'franja-pie', pie.charAt(0).toUpperCase() + pie.slice(1)));
+  return caja;
 }
 
 export function pintar(v, estado, { recargar, ir }) {
@@ -132,8 +133,10 @@ export function pintar(v, estado, { recargar, ir }) {
   v.appendChild(franjaEstado(estado, ir));
   const r = estado.resumen, a = estado.ajustes;
   if (r && (!a || !a.resumen_visto || new Date(r.creado) > new Date(a.resumen_visto))) {
-    const caja = h('div'); const b = h('button', 'aviso'); const t = h('div', 'crece'); t.appendChild(h('div', 'titulo-aviso', 'Resumen nuevo de la semana'));
-    (r.datos.novedades || []).forEach(n => t.appendChild(h('div', 'lbl', n))); b.appendChild(t);
+    // Hasta 3 líneas cortas, sin paréntesis ni códigos; tocar la caja la marca como vista.
+    const caja = h('div'); const b = h('button', 'aviso'); const t = h('div', 'crece');
+    const cab = h('div', 'entre'); cab.append(h('div', 'titulo-aviso', 'Resumen nuevo'), h('span', 'visto', 'Visto')); t.appendChild(cab);
+    (r.datos.novedades || []).map(breve).filter(Boolean).slice(0, 3).forEach(n => t.appendChild(h('div', 'vineta', n))); b.appendChild(t);
     const m = h('div', 'msg');
     b.onclick = async () => {
       b.disabled = true; m.className = 'msg'; m.textContent = '';
@@ -145,6 +148,6 @@ export function pintar(v, estado, { recargar, ir }) {
   v.appendChild(tarjetaAyuno(v, estado, recargar));
   v.appendChild(tarjetaCierre(estado, recargar, repintar));
   const rc = h('section', 'card'); const hechas = new Set(estado.cierres.map(x => x.fecha));
-  rc.appendChild(h('div', 'entre')).append(h('h2', null, 'Racha de cierres'), h('span', 'lbl', hechas.size + ' en 30 días'));
+  rc.appendChild(cabecera('Racha de cierres', hechas.size + ' en 30 días'));
   rc.appendChild(racha(hechas)); v.appendChild(rc);
 }

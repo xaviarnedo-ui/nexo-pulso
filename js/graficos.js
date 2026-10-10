@@ -24,12 +24,13 @@ export function lineaFranja(serie, { w = 320, h: hh = 96 } = {}) {
   return s;
 }
 
-export function linea(serie, { meta = null, w = 320, h: hh = 96 } = {}) {
+// meta: línea discontinua de referencia; etiqueta (opcional) se escribe al principio, encima de ella.
+export function linea(serie, { meta = null, etiqueta = null, w = 320, h: hh = 96 } = {}) {
   const s = lienzo(w, hh); if (!serie.length) return s;
   const pts = serie.map((p, i) => ({ p, i })).filter(({ p }) => fin(p.y)); if (!pts.length) return s;
   const tieneMeta = fin(meta);
   const [lo, hi] = escala(pts.map(({ p }) => p.y).concat(tieneMeta ? [meta] : [])); const X = i => i / Math.max(1, serie.length - 1) * w, Y = v => hh - (v - lo) / (hi - lo) * hh;
-  if (tieneMeta) { el('line', { x1: 0, x2: w, y1: Y(meta), y2: Y(meta), stroke: 'var(--muted)', 'stroke-dasharray': '4 4' }, s); const t = el('text', { x: w, y: Y(meta) - 4, 'text-anchor': 'end' }, s); t.textContent = 'meta ' + String(meta).replace('.', ','); }
+  if (tieneMeta) { el('line', { x1: 0, x2: w, y1: Y(meta), y2: Y(meta), stroke: 'var(--muted)', 'stroke-dasharray': '4 4' }, s); if (etiqueta) { const t = el('text', { x: 0, y: Y(meta) - 5, 'text-anchor': 'start' }, s); t.textContent = etiqueta; } }
   el('polyline', { points: pts.map(({ p, i }) => `${X(i)},${Y(p.y)}`).join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, s);
   const u = pts[pts.length - 1]; el('circle', { cx: X(u.i), cy: Y(u.p.y), r: 3.5, fill: 'var(--accent)' }, s);
   return s;
@@ -41,7 +42,8 @@ const TONO = { verde: 'var(--verde)', ambar: 'var(--ambar)', rojo: 'var(--rojo)'
 export function punto(color, decorativo = false) {
   const c = TONO[color] ? color : 'gris';
   const e = h('span', 'punto ' + c);
-  if (decorativo) e.setAttribute('aria-hidden', 'true');   // el texto de al lado ya dice el color
+  // Gris = dato sin juicio: hueco vacío del mismo ancho (alinea las etiquetas) y nada que leer.
+  if (decorativo || c === 'gris') e.setAttribute('aria-hidden', 'true');   // el texto de al lado ya dice el color
   else { e.setAttribute('role', 'img'); e.setAttribute('aria-label', c === 'ambar' ? 'ámbar' : c === 'gris' ? 'sin valoración' : c); }
   return e;
 }
@@ -56,24 +58,26 @@ export function insignia(color, tam = 44) {
   return s;
 }
 
-// Barras por semana. Cada item: { v, color?, futura?, actual?, ghost?, lo?, hi? }.
+// Barras por semana. Cada item: { v, color?, futura?, actual?, ghost?, lo?, hi?, arriba? } (arriba: texto sobre la barra, p. ej. los km).
 // color 'verde' | 'ambar' | 'gris' pinta la barra; sin color, el estilo anterior (acento) y la banda lo..hi si viene.
 // futura dibuja una barra clara a la altura de `ghost` (o `hi`); actual, la barra con contorno.
 export function barras(items, { w = 320, h: hh = 96 } = {}) {
   const s = lienzo(w, hh); if (!items.length) return s;
-  const max = Math.max(1, ...items.map(i => Math.max(i.v || 0, i.hi || 0, i.ghost || 0))) * 1.1, bw = w / items.length;
+  const conTexto = items.some(i => i.arriba), techo = conTexto ? 18 : 0;   // sitio para el texto encima de la barra más alta
+  const max = Math.max(1, ...items.map(i => Math.max(i.v || 0, i.hi || 0, i.ghost || 0))) * (conTexto ? 1 : 1.1), bw = w / items.length;
   items.forEach((it, i) => {
-    const x = i * bw + bw * 0.18, ancho = bw * 0.64, Y = v => hh - v / max * hh;
+    const x = i * bw + bw * 0.18, ancho = bw * 0.64, Y = v => hh - v / max * (hh - techo);
     if (it.lo != null && it.hi != null) el('rect', { x: i * bw + 2, width: bw - 4, y: Y(it.hi), height: Math.max(1, Y(it.lo) - Y(it.hi)), fill: 'var(--accent-soft)' }, s);
     if (it.futura) {
       const alto = it.ghost || it.hi || 0;
-      if (it.color) el('rect', { x, width: ancho, y: Y(alto), height: Math.max(2, hh - Y(alto)), rx: 3, fill: 'var(--line)', opacity: 0.7 }, s);
+      if (it.color) el('rect', { x, width: ancho, y: Y(alto), height: Math.max(2, hh - Y(alto)), rx: 3, fill: 'var(--futura)' }, s);
       else el('rect', { x, width: ancho, y: Y(alto), height: hh - Y(alto), fill: 'none', stroke: 'var(--line)', 'stroke-dasharray': '3 3', rx: 3 }, s);
     } else {
       const alto = Math.max(it.color ? 3 : 0, hh - Y(it.v || 0));
       const rect = el('rect', { x, width: ancho, y: hh - alto, height: alto, rx: 3, fill: it.color ? (it.color === 'gris' ? 'var(--muted)' : TONO[it.color]) : it.actual ? 'var(--warm)' : 'var(--accent)' }, s);
       if (it.color === 'gris') rect.setAttribute('opacity', 0.45);
       if (it.color && it.actual) { rect.setAttribute('stroke', 'var(--ink)'); rect.setAttribute('stroke-width', 2); }
+      if (it.arriba) { const t = el('text', { x: x + ancho / 2, y: hh - alto - 5, 'text-anchor': 'middle' }, s); t.textContent = it.arriba; }
     }
   });
   return s;
