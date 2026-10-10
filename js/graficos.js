@@ -2,7 +2,8 @@ import { h, diasAtras, fechaCierre } from './util.js';
 const NS = 'http://www.w3.org/2000/svg';
 function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
 function lienzo(w, hh) { return el('svg', { viewBox: `0 0 ${w} ${hh}`, class: 'grafico', role: 'img' }); }
-function escala(vals, pad = 0.08) { const v = vals.filter(x => x != null && !isNaN(x)); const lo = Math.min(...v), hi = Math.max(...v); const m = (hi - lo || 1) * pad; return [lo - m, hi + m]; }
+const fin = x => typeof x === 'number' && Number.isFinite(x);
+function escala(vals, pad = 0.08) { const v = vals.filter(fin); if (!v.length) return [0, 1]; const lo = Math.min(...v), hi = Math.max(...v); const m = (hi - lo || 1) * pad; return [lo - m, hi + m]; }
 
 export function anillo(frac, color, texto, tam = 96) {
   const r = tam / 2 - 8, c = 2 * Math.PI * r, s = el('svg', { viewBox: `0 0 ${tam} ${tam}`, width: tam, height: tam, 'aria-hidden': 'true' });
@@ -15,19 +16,22 @@ export function anillo(frac, color, texto, tam = 96) {
 
 export function lineaFranja(serie, { w = 320, h: hh = 96 } = {}) {
   const s = lienzo(w, hh); if (!serie.length) return s;
+  const ptsLinea = serie.map((p, i) => ({ p, i })).filter(({ p }) => fin(p.y));
+  const ptsBanda = serie.map((p, i) => ({ p, i })).filter(({ p }) => fin(p.lo) && fin(p.hi));
   const [lo, hi] = escala(serie.flatMap(p => [p.y, p.lo, p.hi])); const X = i => i / Math.max(1, serie.length - 1) * w, Y = v => hh - (v - lo) / (hi - lo) * hh;
-  const banda = serie.map((p, i) => `${X(i)},${Y(p.hi)}`).concat(serie.map((p, i) => `${X(serie.length - 1 - i)},${Y(serie[serie.length - 1 - i].lo)}`));
-  el('polygon', { points: banda.join(' '), fill: 'var(--accent-soft)' }, s);
-  el('polyline', { points: serie.map((p, i) => `${X(i)},${Y(p.y)}`).join(' '), fill: 'none', stroke: 'var(--warm)', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, s);
+  if (ptsBanda.length) { const banda = ptsBanda.map(({ p, i }) => `${X(i)},${Y(p.hi)}`).concat([...ptsBanda].reverse().map(({ p, i }) => `${X(i)},${Y(p.lo)}`)); el('polygon', { points: banda.join(' '), fill: 'var(--accent-soft)' }, s); }
+  if (ptsLinea.length) el('polyline', { points: ptsLinea.map(({ p, i }) => `${X(i)},${Y(p.y)}`).join(' '), fill: 'none', stroke: 'var(--warm)', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, s);
   return s;
 }
 
 export function linea(serie, { meta = null, w = 320, h: hh = 96 } = {}) {
   const s = lienzo(w, hh); if (!serie.length) return s;
-  const [lo, hi] = escala(serie.map(p => p.y).concat(meta != null ? [meta] : [])); const X = i => i / Math.max(1, serie.length - 1) * w, Y = v => hh - (v - lo) / (hi - lo) * hh;
-  if (meta != null) { el('line', { x1: 0, x2: w, y1: Y(meta), y2: Y(meta), stroke: 'var(--muted)', 'stroke-dasharray': '4 4' }, s); const t = el('text', { x: w, y: Y(meta) - 4, 'text-anchor': 'end' }, s); t.textContent = 'meta ' + String(meta).replace('.', ','); }
-  el('polyline', { points: serie.map((p, i) => `${X(i)},${Y(p.y)}`).join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, s);
-  const u = serie.length - 1; el('circle', { cx: X(u), cy: Y(serie[u].y), r: 3.5, fill: 'var(--accent)' }, s);
+  const pts = serie.map((p, i) => ({ p, i })).filter(({ p }) => fin(p.y)); if (!pts.length) return s;
+  const tieneMeta = fin(meta);
+  const [lo, hi] = escala(pts.map(({ p }) => p.y).concat(tieneMeta ? [meta] : [])); const X = i => i / Math.max(1, serie.length - 1) * w, Y = v => hh - (v - lo) / (hi - lo) * hh;
+  if (tieneMeta) { el('line', { x1: 0, x2: w, y1: Y(meta), y2: Y(meta), stroke: 'var(--muted)', 'stroke-dasharray': '4 4' }, s); const t = el('text', { x: w, y: Y(meta) - 4, 'text-anchor': 'end' }, s); t.textContent = 'meta ' + String(meta).replace('.', ','); }
+  el('polyline', { points: pts.map(({ p, i }) => `${X(i)},${Y(p.y)}`).join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, s);
+  const u = pts[pts.length - 1]; el('circle', { cx: X(u.i), cy: Y(u.p.y), r: 3.5, fill: 'var(--accent)' }, s);
   return s;
 }
 

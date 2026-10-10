@@ -44,6 +44,7 @@ h2 { font-size: 15px; font-weight: 600; margin: 0; }
 input[type=time], input[type=text], input[type=email], input[inputmode=numeric] { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-height: 44px; width: 100%; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; } .chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); }
 .aviso { background: var(--accent-soft); border-radius: var(--r); padding: 12px 14px; display: flex; gap: 10px; align-items: center; border: 0; text-align: left; width: 100%; }
+.titulo-aviso { font-weight: 600; font-size: 15px; }
 .msg { font-size: 13px; min-height: 18px; } .msg.ok { color: var(--verde); } .msg.err { color: var(--rojo); }
 .grafico { width: 100%; height: auto; display: block; overflow: visible; }
 .grafico text { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
