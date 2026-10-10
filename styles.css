@@ -41,7 +41,7 @@ h2 { font-size: 15px; font-weight: 600; margin: 0; }
 .opciones button { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 10px 0; min-height: 44px; }
 .opciones button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
 .q { display: flex; flex-direction: column; gap: 6px; } .q .t { font-size: 14px; font-weight: 500; } .q small { color: var(--muted); font-weight: 400; }
-input[type=time], input[type=text], input[type=email], input[inputmode=numeric] { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-height: 44px; width: 100%; }
+input[type=time], input[type=text], input[type=email], input[type=password], input[inputmode=numeric] { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-height: 44px; width: 100%; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; } .chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); }
 .aviso { background: var(--accent-soft); border-radius: var(--r); padding: 12px 14px; display: flex; gap: 10px; align-items: center; border: 0; text-align: left; width: 100%; }
 .titulo-aviso { font-weight: 600; font-size: 15px; }
