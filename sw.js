@@ -1,6 +1,6 @@
 /* NEXO Pulso: caché de la interfaz (sin datos) y notificaciones push. */
-const CACHE = 'pulso-v7';
-const V = '?v=7';
+const CACHE = 'pulso-v8';
+const V = '?v=8';
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';   // misma URL que index.html
 const MODULOS = ['config', 'util', 'datos', 'graficos', 'filas', 'semaforos'].map(m => `js/${m}.js`)
   .concat(['hoy', 'forma', 'fatiga', 'carrera', 'cuerpo', 'ajustes'].map(m => `js/pestanas/${m}.js`));

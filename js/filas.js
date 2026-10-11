@@ -16,6 +16,9 @@ export function dato(etq, valor, sec, color, cls) {
   e.appendChild(d); return e;
 }
 
+// Línea pequeña y apagada bajo una fila de lista (platos de una comida, detalle de una carrera): puede partirse en varias líneas.
+export function nota(texto) { return h('div', 'nota-fila', texto); }
+
 // Cabecera de tarjeta: título (estilo etiqueta) y, a la derecha, un dato de contexto pequeño.
 export function cabecera(titulo, sub) {
   const e = h('div', 'cabecera'); e.appendChild(h('h2', null, titulo));

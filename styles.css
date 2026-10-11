@@ -127,3 +127,9 @@ input[type=time]::-webkit-datetime-edit { padding: 0; }
 .plan[open] > summary::after { transform: rotate(-135deg); }
 .plan .lista { margin-top: 2px; }
 .cifra.t-verde { color: var(--verde); } .cifra.t-ambar { color: var(--ambar); } .cifra.t-rojo { color: var(--rojo); }
+/* Menú de hoy y próximas carreras: subtítulo, línea de platos o detalle bajo la fila */
+.menu-hoy { display: flex; flex-direction: column; gap: 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.subtitulo { font-size: 14px; font-weight: 600; }
+.horario { margin-top: -6px; }
+.lista .nota-fila { font-size: 12px; line-height: 1.35; color: var(--muted); margin: -6px 0 9px; overflow-wrap: anywhere; }
+.cifra.total { font-weight: 600; } .cifra.hoy { color: var(--accent); font-weight: 600; }

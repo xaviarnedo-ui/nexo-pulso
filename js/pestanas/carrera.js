@@ -1,6 +1,6 @@
-import { h, num, fmtFecha, fechaCorta, isoDia, limpia, pct } from '../util.js';
+import { h, num, fmtFecha, fechaCorta, limpia, pct, diasHasta, cuantoFalta } from '../util.js';
 import { barras } from '../graficos.js';
-import { dato, tarjetaEstado, cabecera, heroe } from '../filas.js';
+import { dato, nota, tarjetaEstado, cabecera, heroe } from '../filas.js';
 import { colorRango, colorFacil, colorVolumen, colorSemana, kmSemanaAnterior, peor, frase } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 
@@ -44,8 +44,7 @@ export function pintar(v, estado) {
   if (act) { const global = peor([...Object.values(colores), colorSemana(act)]); v.appendChild(tarjetaEstado(global, frase('carrera', global))); }
 
   const top = h('section', 'card');
-  // Días de calendario (medianoche local a mediodía local): con UTC la cuenta se queda corta de noche.
-  const dias = Math.max(0, Math.round((new Date(c.fecha + 'T12:00') - new Date(isoDia(new Date()) + 'T12:00')) / 864e5));
+  const dias = Math.max(0, diasHasta(c.fecha));
   const hz = heroe(c.carrera, String(dias), dias === 1 ? 'día' : 'días');
   hz.appendChild(h('div', 'pie', fmtFecha(c.fecha).replace('.', '')));
   top.appendChild(hz);
@@ -55,6 +54,19 @@ export function pintar(v, estado) {
     top.appendChild(l);
   }
   v.appendChild(top);
+
+  // Otras carreras antes del objetivo (plan, no juicio: sin punto). Los días se cuentan en el móvil, no al subir el resumen.
+  const otras = (c.otras_carreras || []).map(o => ({ ...o, faltan: diasHasta(o.fecha) })).filter(o => o.faltan >= 0)
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (otras.length) {
+    const pc = h('section', 'card'); pc.appendChild(cabecera('Próximas carreras'));
+    const l = h('div', 'lista');
+    otras.forEach(o => {
+      l.appendChild(dato(o.corto || limpia(o.nombre), fechaCorta(o.fecha) + ' · ' + cuantoFalta(o.faltan)));
+      if (o.detalle) l.appendChild(nota(limpia(o.detalle)));
+    });
+    pc.appendChild(l); v.appendChild(pc);
+  }
 
   if (sem.length) {
     const g = h('section', 'card'); g.appendChild(cabecera('Plan semanal', 'carreras por semana'));

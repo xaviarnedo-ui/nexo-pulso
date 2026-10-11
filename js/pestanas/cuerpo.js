@@ -1,7 +1,27 @@
-import { h, num, conSigno, esCero, fechaCorta, pct, sinParentesis } from '../util.js';
+import { h, num, conSigno, esCero, fechaCorta, pct, sinParentesis, limpia, isoDia, miles, diaSemana } from '../util.js';
 import { linea } from '../graficos.js';
-import { dato, tarjetaEstado, cabecera, heroe } from '../filas.js';
+import { dato, nota, tarjetaEstado, cabecera, heroe } from '../filas.js';
 import { colorRitmoPeso, frase } from '../semaforos.js';
+// Etiqueta corta del día: sin paréntesis y, si trae explicación tras ":", solo lo de delante ("Sábado: comida libre…" → "Sábado").
+const etiquetaDia = x => limpia(x.etiqueta || x.tipo || '').split(':')[0];
+
+// Menú de hoy por comidas (como la hoja de la nevera): plan, no juicio; sin puntos y sin rojo.
+function menuHoy(x) {
+  const b = h('div', 'menu-hoy'); b.appendChild(h('div', 'subtitulo', 'Hoy · ' + etiquetaDia(x)));
+  if (x.fuera) { b.appendChild(h('div', 'pie', 'Comidas fuera: ' + limpia(x.entreno || '').replace(/\.$/, ''))); return b; }
+  const l = h('div', 'lista');
+  (x.comidas || []).forEach(c => {
+    l.appendChild(dato(c.comida + (c.hora ? ' · ' + c.hora : ''), miles(c.kcal) + ' kcal', `P ${miles(c.p)} · H ${miles(c.h)} · G ${miles(c.g)}`));
+    if ((c.platos || []).length) l.appendChild(nota(c.platos.join(' · ')));
+  });
+  if (x.kcal != null) l.appendChild(dato('Total', miles(x.kcal) + ' kcal', 'P ' + miles(x.p), null, 'total'));
+  b.appendChild(l);
+  const bajo = (x.bajo || []).filter(n => n !== 'sodio alto'), sodio = (x.bajo || []).includes('sodio alto');
+  const t = [bajo.length ? 'Por debajo hoy: ' + bajo.join(', ') : '', sodio ? 'sodio alto' : ''].filter(Boolean).join(' · ');
+  if (t) b.appendChild(h('div', 'pie', t));
+  return b;
+}
+
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
 
 export function pintar(v, estado) {
@@ -29,14 +49,24 @@ export function pintar(v, estado) {
     const nu = c.nutricion, dias = nu.objetivo || [];
     const kcal = nu.kcal_semana != null ? nu.kcal_semana : (() => { const k = dias.map(x => x.kcal).filter(Number.isFinite); return k.length ? Math.round(k.reduce((s, x) => s + x, 0) / k.length) : null; })();
     const n = h('section', 'card'); n.appendChild(cabecera('Comida · plan'));
+    if (nu.horario) n.appendChild(h('div', 'pie horario', nu.horario));
+    const semana = nu.semana || [], hoy = semana.find(x => x.fecha === isoDia(new Date()));
+    if (hoy) n.appendChild(menuHoy(hoy));
     const l = h('div', 'lista');
-    l.appendChild(dato('Kcal media prevista', kcal == null ? '·' : num(kcal, 0) + ' kcal/día'));
+    l.appendChild(dato('Kcal media prevista', kcal == null ? '·' : miles(kcal) + ' kcal/día'));
     l.appendChild(dato('Proteína', nu.proteina_g == null ? '·' : num(nu.proteina_g, 0) + ' g/día'));
     n.appendChild(l);
+    if (semana.length) {
+      const d = h('details', 'plan'); d.appendChild(h('summary', null, 'Toda la semana'));
+      const ld = h('div', 'lista');
+      semana.forEach(x => ld.appendChild(dato(diaSemana(x.fecha) + ' · ' + etiquetaDia(x), x.fuera ? 'fuera' : miles(x.kcal) + ' kcal',
+        x.fuera || x.p == null ? '' : 'P ' + miles(x.p), null, x === hoy ? 'hoy' : null)));
+      d.appendChild(ld); n.appendChild(d);
+    }
     if (dias.length) {
       const d = h('details', 'plan'); d.appendChild(h('summary', null, 'Según la carga del día'));
       const ld = h('div', 'lista');
-      dias.forEach(x => ld.appendChild(dato(sinParentesis(x.tipo), x.kcal == null ? '·' : num(x.kcal, 0) + ' kcal',
+      dias.forEach(x => ld.appendChild(dato(sinParentesis(x.tipo), x.kcal == null ? '·' : miles(x.kcal) + ' kcal',
         `P ${num(x.proteina_g, 0)} · H ${num(x.hidratos_g, 0)} · G ${num(x.grasa_g, 0)} g`)));
       d.appendChild(ld); n.appendChild(d);
     }

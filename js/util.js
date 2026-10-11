@@ -23,3 +23,11 @@ export const esCero = (x, dec = 1) => x != null && !isNaN(x) && Number(Number(x)
 export const fechaCorta = s => new Date(s + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).replace('.', '');
 // Porcentaje en una pieza: espacio fino que no se parte ("86 %").
 export const pct = (x, dec = 0) => (typeof x === 'string' ? x : num(x, dec)) + '\u202f%';
+// Días de calendario desde hoy hasta una fecha ISO (mediodía local a mediodía local: con UTC la cuenta se queda corta de noche).
+export const diasHasta = (iso, hoy = new Date()) => Math.round((new Date(iso + 'T12:00') - new Date(isoDia(hoy) + 'T12:00')) / 864e5);
+// "hoy" · "mañana" · "21 días".
+export const cuantoFalta = n => n === 0 ? 'hoy' : n === 1 ? 'mañana' : n + ' días';
+// Miles con punto, también con 4 cifras: 1234 → "1.234" (es-ES no agrupa 4 cifras).
+export const miles = x => x == null || isNaN(x) ? '·' : String(Math.round(Number(x))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+// "lun 12" (día de la semana corto y día del mes).
+export const diaSemana = s => { const d = new Date(s + 'T12:00'); return d.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '') + ' ' + d.getDate(); };
