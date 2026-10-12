@@ -8,7 +8,7 @@ const etiquetaDia = x => limpia(x.etiqueta || x.tipo || '').split(':')[0];
 // Menú de hoy por comidas (como la hoja de la nevera): plan, no juicio; sin puntos y sin rojo.
 function menuHoy(x) {
   const b = h('div', 'menu-hoy'); b.appendChild(h('div', 'subtitulo', 'Hoy · ' + etiquetaDia(x)));
-  if (x.fuera) { b.appendChild(h('div', 'pie', 'Comidas fuera: ' + limpia(x.entreno || '').replace(/\.$/, ''))); return b; }
+  if (x.fuera) { b.appendChild(h('div', 'pie', x.libre ? 'Día libre sin menú: sin pasarte, proteína y verdura en cada comida' : 'Comidas fuera: ' + limpia(x.entreno || '').replace(/\.$/, ''))); return b; }
   const l = h('div', 'lista');
   (x.comidas || []).forEach(c => {
     l.appendChild(dato(c.comida + (c.hora ? ' · ' + c.hora : ''), miles(c.kcal) + ' kcal', `P ${miles(c.p)} · H ${miles(c.h)} · G ${miles(c.g)}`));
@@ -59,7 +59,7 @@ export function pintar(v, estado) {
     if (semana.length) {
       const d = h('details', 'plan'); d.appendChild(h('summary', null, 'Toda la semana'));
       const ld = h('div', 'lista');
-      semana.forEach(x => ld.appendChild(dato(diaSemana(x.fecha) + ' · ' + etiquetaDia(x), x.fuera ? 'fuera' : miles(x.kcal) + ' kcal',
+      semana.forEach(x => ld.appendChild(dato(diaSemana(x.fecha) + ' · ' + etiquetaDia(x), x.fuera ? (x.libre ? 'libre' : 'fuera') : miles(x.kcal) + ' kcal',
         x.fuera || x.p == null ? '' : 'P ' + miles(x.p), null, x === hoy ? 'hoy' : null)));
       d.appendChild(ld); n.appendChild(d);
     }
