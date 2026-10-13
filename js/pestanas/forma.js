@@ -1,5 +1,5 @@
 import { h, num, conSigno, esCero, limpia, pct } from '../util.js';
-import { linea } from '../graficos.js';
+import { lineaZonas, etiquetasSemanas } from '../graficos.js';
 import { dato, tarjetaEstado, cabecera, heroe, cambio, tesela } from '../filas.js';
 import { colorIndice, peor, frase } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
@@ -32,7 +32,14 @@ export function pintar(v, estado) {
   const pill = f.cambio == null || esCero(f.cambio) ? null : cambio(conSigno(f.cambio), tono(f.cambio));
   if (pill) pill.title = 'frente a la semana anterior';
   c.appendChild(heroe('Índice de forma', num(f.indice), null, { extra: pill }));
-  c.appendChild(linea((f.serie || []).filter(s => s.valor != null).map(s => ({ y: Number(s.valor) })), { meta: 50, etiqueta: 'base 50' }));
+  // Últimas semanas sobre las zonas del índice: rojo < 45, ámbar 45–50, verde ≥ 50 (tu base).
+  const sem = (f.serie || []).filter(s => s.valor != null).slice(-6).map((s, i, a) => ({ lunes: s.semana, y: Number(s.valor), actual: i === a.length - 1 }));
+  if (sem.length) {
+    c.appendChild(lineaZonas(sem, { corte: 50, colorDe: colorIndice,
+      zonas: [{ de: -1e9, a: 45, color: 'rojo' }, { de: 45, a: 50, color: 'ambar' }, { de: 50, a: 1e9, color: 'verde' }] }));
+    c.appendChild(etiquetasSemanas(sem));
+    c.appendChild(h('div', 'pie', 'Verde ≥ 50, tu base · ámbar 45–50 · rojo < 45'));
+  }
   if (pilares.length) {
     const t = h('div', 'teselas t3');
     pilares.forEach(p => {

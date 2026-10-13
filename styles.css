@@ -116,6 +116,13 @@ input[type=time]::-webkit-datetime-edit { padding: 0; }
 .pob { border-top: 1px solid var(--line); padding-bottom: 12px; } .pob:first-child { border-top: 0; } .lista .pob .entre { padding: 9px 0 7px; border-top: 0; }
 /* Carga aguda:crónica: medidor con zonas y frase */
 .medidor { margin-top: 4px; }
+.linea-zonas .zona-verde { fill: var(--verde-soft); } .linea-zonas .zona-ambar { fill: var(--ambar-soft); } .linea-zonas .zona-rojo { fill: var(--rojo-soft); }
+.linea-zonas .corte { stroke: var(--verde); stroke-dasharray: 4 4; stroke-width: 1.2; opacity: .7; }
+.linea-zonas .trazo { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; opacity: .35; }
+.linea-zonas .pt { stroke: var(--surface); stroke-width: 2; } .linea-zonas .pt.verde { fill: var(--verde); } .linea-zonas .pt.ambar { fill: var(--ambar); } .linea-zonas .pt.rojo { fill: var(--rojo); }
+.linea-zonas .pt.actual { stroke: var(--ink); stroke-width: 2; }
+.linea-zonas text.valor { font-size: 12.5px; fill: var(--muted); } .linea-zonas text.valor.actual { font-size: 14px; font-weight: 600; fill: var(--ink); }
+.heroe + .linea-zonas { margin-top: 10px; }
 .medidor .zona-verde { fill: var(--verde); } .medidor .zona-ambar { fill: var(--ambar); } .medidor .zona-rojo { fill: var(--rojo); }
 .medidor .marca-valor { fill: var(--ink); stroke: var(--surface); stroke-width: 2; }
 .frase-acwr { font-size: 15px; font-weight: 600; line-height: 1.3; }

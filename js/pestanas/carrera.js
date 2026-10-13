@@ -1,5 +1,5 @@
 import { h, num, fmtFecha, fechaCorta, limpia, pct, diasHasta, cuantoFalta } from '../util.js';
-import { barras } from '../graficos.js';
+import { barras, etiquetasSemanas } from '../graficos.js';
 import { dato, nota, tarjetaEstado, cabecera, heroe } from '../filas.js';
 import { colorRango, colorFacil, colorVolumen, colorSemana, kmSemanaAnterior, peor, frase } from '../semaforos.js';
 function sinResumen(v, titulo) { v.appendChild(h('h1', null, titulo)); v.appendChild(h('section', 'card', 'Aún no hay resumen: llega el martes, cuando se actualizan tus datos.')); }
@@ -14,21 +14,6 @@ const tiempo = s => String(s || '').replace(/^(.*\d+:\d{2}):00$/, '$1');
 const RITMO = { 'Rodaje fácil y tirada larga': 'Fácil y tirada', 'Umbral (tempo)': 'Umbral', 'Ritmo de media': 'Media' };
 // Rango previsto: "2–3", o "3" si los dos extremos coinciden.
 const rango = x => x[0] === x[1] ? String(x[0]) : `${x[0]}–${x[1]}`;
-const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-// Fechas bajo las barras: el día del lunes y, en la primera semana de cada mes, el mes debajo.
-function etiquetasSemanas(sem) {
-  const g = h('div', 'semanas-etq'); g.style.gridTemplateColumns = `repeat(${sem.length}, 1fr)`; g.setAttribute('aria-hidden', 'true');
-  let mesPrevio = null;
-  sem.forEach(s => {
-    const d = new Date(s.lunes + 'T12:00'), m = d.getMonth();
-    const c = h('span', s.actual ? 'actual' : null, String(d.getDate()));
-    c.appendChild(h('span', 'mes', m !== mesPrevio ? MES[m] : ' ')); mesPrevio = m;
-    g.appendChild(c);
-  });
-  return g;
-}
-
 export function pintar(v, estado) {
   const r = estado.resumen; if (!r) return sinResumen(v, 'Carrera');
   if (!r.datos.carrera) { v.appendChild(h('h1', null, 'Carrera')); v.appendChild(h('section', 'card', 'Sin objetivo de carrera en el resumen.')); return; }

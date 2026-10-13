@@ -49,6 +49,39 @@ export function medidor(valor, { min, max, zonas, cortes = [], w = 320 } = {}) {
 
 const TONO = { verde: 'var(--verde)', ambar: 'var(--ambar)', rojo: 'var(--rojo)', gris: 'var(--muted)' };
 
+// Evolución semanal sobre bandas de color (rojo / ámbar / verde): un punto por semana teñido por su zona y su valor encima.
+// serie: [{ y, actual? }]; zonas: [{ de, a, color }] de abajo arriba; corte: valor de referencia con línea discontinua (p. ej. 50).
+export function lineaZonas(serie, { zonas, corte = null, colorDe, w = 320, h: hh = 150 } = {}) {
+  const s = lienzo(w, hh); s.classList.add('linea-zonas'); const pts = serie.map((p, i) => ({ p, i })).filter(({ p }) => fin(p.y)); if (!pts.length) return s;
+  const ys = pts.map(({ p }) => p.y), arriba = 20, abajo = 6;
+  const lo = Math.min(...ys, corte ?? Infinity) - 4, hi = Math.max(...ys, corte ?? -Infinity) + 6;
+  const paso = w / serie.length, X = i => paso * (i + 0.5), Y = v => arriba + (hi - v) / (hi - lo) * (hh - arriba - abajo);
+  zonas.forEach(z => { const y1 = Y(Math.min(hi, z.a)), y2 = Y(Math.max(lo, z.de)); if (y2 > y1) el('rect', { x: 0, y: y1, width: w, height: y2 - y1, class: 'zona-' + z.color }, s); });
+  if (fin(corte)) el('line', { x1: 0, x2: w, y1: Y(corte), y2: Y(corte), class: 'corte' }, s);
+  el('polyline', { points: pts.map(({ p, i }) => `${X(i)},${Y(p.y)}`).join(' '), class: 'trazo' }, s);
+  pts.forEach(({ p, i }) => {
+    const c = colorDe ? colorDe(p.y) : 'gris';
+    el('circle', { cx: X(i), cy: Y(p.y), r: p.actual ? 6.5 : 5, class: 'pt ' + c + (p.actual ? ' actual' : '') }, s);
+    const t = el('text', { x: X(i), y: Y(p.y) - 11, 'text-anchor': 'middle', class: p.actual ? 'valor actual' : 'valor' }, s);
+    t.textContent = p.y.toFixed(1).replace('.', ',');
+  });
+  return s;
+}
+
+// Fechas bajo una gráfica semanal: el día del lunes y, en la primera semana de cada mes, el mes debajo.
+const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+export function etiquetasSemanas(sem) {
+  const g = h('div', 'semanas-etq'); g.style.gridTemplateColumns = `repeat(${sem.length}, 1fr)`; g.setAttribute('aria-hidden', 'true');
+  let mesPrevio = null;
+  sem.forEach(s => {
+    const d = new Date(s.lunes + 'T12:00'), m = d.getMonth();
+    const c = h('span', s.actual ? 'actual' : null, String(d.getDate()));
+    c.appendChild(h('span', 'mes', m !== mesPrevio ? MES[m] : ' ')); mesPrevio = m;
+    g.appendChild(c);
+  });
+  return g;
+}
+
 // Punto de estado (12 px). El color va por clase; el nombre del color, en aria-label.
 export function punto(color, decorativo = false) {
   const c = TONO[color] ? color : 'gris';
