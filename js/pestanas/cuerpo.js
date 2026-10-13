@@ -14,7 +14,10 @@ function menuHoy(x) {
     l.appendChild(dato(c.comida + (c.hora ? ' · ' + c.hora : ''), miles(c.kcal) + ' kcal', `P ${miles(c.p)} · H ${miles(c.h)} · G ${miles(c.g)}`));
     if ((c.platos || []).length) l.appendChild(nota(c.platos.join(' · ')));
   });
-  if (x.kcal != null) l.appendChild(dato('Total', miles(x.kcal) + ' kcal', 'P ' + miles(x.p), null, 'total'));
+  // Comidas fuera de casa ese día (p. ej. la cena de un evento): sin kcal, solo la pauta.
+  (x.fuera_texto || []).forEach(t => { l.appendChild(dato(t.comida, 'fuera', '')); l.appendChild(nota(limpia(t.texto))); });
+  if (x.kcal != null) l.appendChild(dato((x.fuera_texto || []).length ? 'Total sin lo de fuera' : 'Total', miles(x.kcal) + ' kcal',
+    x.h != null ? `P ${miles(x.p)} · H ${miles(x.h)} · G ${miles(x.g)}` : 'P ' + miles(x.p), null, 'total'));
   b.appendChild(l);
   const bajo = (x.bajo || []).filter(n => n !== 'sodio alto'), sodio = (x.bajo || []).includes('sodio alto');
   const t = [bajo.length ? 'Por debajo hoy: ' + bajo.join(', ') : '', sodio ? 'sodio alto' : ''].filter(Boolean).join(' · ');
