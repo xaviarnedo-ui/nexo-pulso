@@ -70,7 +70,10 @@ export function pintar(v, estado) {
     l.appendChild(dato('Km', num(act.km, 0), dif == null ? '' : (dif > 0 ? '+' : dif < 0 ? '−' : '') + Math.abs(dif) + ' % frente a la anterior', colores.volumen));
     if (act.tirada_km) l.appendChild(dato('Tirada larga', num(act.tirada_km) + ' km', '', 'gris'));
     l.appendChild(dato('CrossFit', ent(act.crossfit), act.objetivo ? 'previstos ' + rango(act.objetivo.crossfit) : '', colores.crossfit));
-    if (act.facil_pct != null) l.appendChild(dato('% fácil', pct(act.facil_pct), '', colores.facil));
+    if (act.facil_pct != null) l.appendChild(dato('% fácil', pct(act.facil_pct), 'corriendo', colores.facil));
+    // La bici suma volumen aeróbico: entra en el % fácil total, no en los km (plan, sin punto en los minutos).
+    if (act.bici_min) l.appendChild(dato('Bici', act.bici_min + ' min', 'no suma km', 'gris'));
+    if (act.facil_total_pct != null) l.appendChild(dato('% fácil total', pct(act.facil_total_pct), 'carrera y bici', colorFacil(act.facil_total_pct)));
     k.appendChild(l); (act.avisos || []).filter(a => !AV_CON_FILA.has(a)).forEach(a => k.appendChild(h('div', 'estado-pill ambar', limpia(a)))); v.appendChild(k);
   }
 
