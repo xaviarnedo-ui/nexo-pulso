@@ -16,12 +16,14 @@ export function pintar(v, estado) {
   const serie = ((t.hrv && t.hrv.serie) || []).filter(p => p.hrv7 != null);
   const fr = t.fc_reposo || {};
   const g = h('section', 'card');
-  g.appendChild(heroe('HRV · media de 7 días', serie.length ? num(serie[serie.length - 1].hrv7, 0) : '·', serie.length ? 'ms' : null, { color: colorHRV(t.hrv_bajo, fr.sobre_base) }));
+  g.appendChild(heroe('HRV · media de 7 días', serie.length ? num(serie[serie.length - 1].hrv7, 0) : '·', serie.length ? 'ms' : null, { color: t.hrv_recalibrando ? 'gris' : colorHRV(t.hrv_bajo, fr.sobre_base) }));
   // lo/hi pueden ser null (sin franja): Number(null) valdría 0 y pintaría la banda hasta cero.
   if (serie.length) {
     g.appendChild(lineaFranja(serie.map(p => ({ y: Number(p.hrv7), lo: p.lo == null ? null : Number(p.lo), hi: p.hi == null ? null : Number(p.hi) }))));
     if (serie.some(p => p.lo != null && p.hi != null)) g.appendChild(h('div', 'pie', 'La banda es tu franja normal.'));
   }
+  // Tras un cambio de medida (p. ej. una actualización de WHOOP) la HRV no se juzga hasta tener franja nueva.
+  if (t.hrv_recalibrando) g.appendChild(h('div', 'pie', t.hrv_recalibrando));
   v.appendChild(g);
 
   // Carga aguda:crónica: la carga de 7 días frente a la media semanal de las 4 anteriores (E7).
