@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { diasHasta, cuantoFalta, miles, diaSemana, fechaCierrePorDefecto } from '../js/util.js';
+import { diasHasta, cuantoFalta, miles, diaSemana, fechaCierrePorDefecto, fechaDeComida, ultimaComidaDe } from '../js/util.js';
 
 test('días hasta una fecha: de calendario, también de noche', () => {
   assert.equal(diasHasta('2026-11-01', new Date(2026, 9, 11, 23, 30)), 21);
@@ -40,4 +40,22 @@ test('cierre por defecto: de madrugada y por la mañana sin el de ayer es el de 
   assert.equal(fechaCierrePorDefecto(sin, new Date(2026, 10, 1, 5, 0)), '2026-10-31');      // 05:00 con ayer sin hacer
   assert.equal(fechaCierrePorDefecto([], new Date(2026, 10, 1, 7, 0)), '2026-10-31');       // primer día
   assert.equal(fechaCierrePorDefecto(sin, new Date(2026, 2, 1, 8, 0)), '2026-02-28');       // cruce de mes
+});
+
+test('última comida = inicio del ayuno: la de madrugada cuenta como del día anterior', () => {
+  assert.equal(fechaDeComida('2026-10-31T22:00'), '2026-10-31');
+  assert.equal(fechaDeComida('2026-11-01T00:30'), '2026-10-31');
+  assert.equal(fechaDeComida('2026-11-01T04:59'), '2026-10-31');
+  assert.equal(fechaDeComida('2026-11-01T05:00'), '2026-11-01');
+  assert.equal(fechaDeComida('2026-03-01T01:00'), '2026-02-28');
+});
+
+test('última comida de un día: del ayuno en curso o de los ya hechos; null si no hay', () => {
+  const hechos = [{ inicio: '2026-10-30T23:45' }, { inicio: '2026-10-29T22:06' }];
+  assert.equal(ultimaComidaDe('2026-10-31', { inicio: '2026-10-31T22:00' }, hechos), '22:00');
+  assert.equal(ultimaComidaDe('2026-10-30', null, hechos), '23:45');
+  assert.equal(ultimaComidaDe('2026-10-30', { inicio: '2026-10-31T22:00' }, hechos), '23:45');
+  assert.equal(ultimaComidaDe('2026-10-31', null, hechos), null);
+  assert.equal(ultimaComidaDe('2026-10-31', null, [{ inicio: '2026-10-31T20:00' }, { inicio: '2026-11-01T00:20' }]), '00:20');   // la más tardía
+  assert.equal(ultimaComidaDe('2026-10-31', null, undefined), null);
 });

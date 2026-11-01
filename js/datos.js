@@ -11,6 +11,7 @@ export async function salir() { await sb.auth.signOut(); _uid = null; }
 
 export async function leerCierres(desde) { return ok(await sb.from('cierres').select('*').gte('fecha', desde).order('fecha', { ascending: false })); }
 export async function guardarCierre(fila) { ok(await sb.from('cierres').upsert({ ...fila, user_id: _uid, guardado: new Date().toISOString() }, { onConflict: 'user_id,fecha' })); }
+export async function ponerUltimaComida(fecha, hhmm) { ok(await sb.from('cierres').update({ ultima_comida: hhmm }).eq('user_id', _uid).eq('fecha', fecha)); }
 export async function leerAyunoActual() { return ok(await sb.from('ayuno_actual').select('*').maybeSingle()); }
 export async function empezarAyuno(inicio) { ok(await sb.from('ayuno_actual').upsert({ user_id: _uid, inicio }, { onConflict: 'user_id' })); }
 export async function romperAyuno(inicio, fin) {

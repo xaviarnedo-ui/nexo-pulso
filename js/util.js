@@ -39,3 +39,10 @@ export const cuantoFalta = n => n === 0 ? 'hoy' : n === 1 ? 'mañana' : n + ' d�
 export const miles = x => x == null || isNaN(x) ? '·' : String(Math.round(Number(x))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 // "lun 12" (día de la semana corto y día del mes).
 export const diaSemana = s => { const d = new Date(s + 'T12:00'); return d.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '') + ' ' + d.getDate(); };
+// La hora de la última comida es la hora de inicio del ayuno. Una comida de madrugada (antes de las 05:00) cuenta como del día anterior.
+export const fechaDeComida = inicio => { const d = new Date(inicio.slice(0, 10) + 'T12:00'); if (Number(inicio.slice(11, 13)) < 5) d.setDate(d.getDate() - 1); return isoDia(d); };
+// "HH:MM" de la última comida de un día de cierre, sacada del ayuno en curso y de los ayunos hechos (el más tardío); null si no hay ninguno.
+export const ultimaComidaDe = (fecha, ayunoActual, ayunos) => {
+  const t = [ayunoActual, ...(ayunos || [])].filter(Boolean).map(x => x.inicio).filter(i => fechaDeComida(i) === fecha).sort();
+  return t.length ? t[t.length - 1].slice(11, 16) : null;
+};
