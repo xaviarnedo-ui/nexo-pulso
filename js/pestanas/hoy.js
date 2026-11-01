@@ -1,5 +1,5 @@
 import { guardarCierre, empezarAyuno, romperAyuno, guardarAjustes } from '../datos.js';
-import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, diasAtras, fechaCorta, breve } from '../util.js';
+import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, fechaCierrePorDefecto, diasAtras, fechaCorta, breve, diaSemana } from '../util.js';
 import { anillo, racha, punto } from '../graficos.js';
 import { cabecera } from '../filas.js';
 import { estadoFatiga, hayEnfermo } from '../semaforos.js';
@@ -17,6 +17,8 @@ const PREGUNTAS = [
 const ETIQ = { deficit: 'déficit', mantenimiento: 'normal', superavit: 'de más' };
 // Estado de la pestaña que sobrevive a los repintados. formFecha es el día de cierre al que pertenece el formulario.
 let form = null, formFecha = null, editando = false, horaTocada = false, tick = null;
+// Día elegido a mano en la tarjeta del cierre (ayer u hoy) y el día en que se eligió: al cambiar de día vuelve el valor por defecto.
+let elegida = null, eligioEn = null;
 
 function inicioDesdeComida(fecha, comida) { const d = new Date(fecha + 'T12:00'); if (Number(comida.split(':')[0]) < 5) d.setDate(d.getDate() + 1); return isoDia(d) + 'T' + comida; }
 
@@ -63,17 +65,34 @@ function tarjetaAyuno(v, estado, recargar) {
 }
 
 function tarjetaCierre(estado, recargar, repintar) {
-  const fecha = fechaCierre(); const hoy = estado.cierres.find(x => x.fecha === fecha);
-  // Un formulario a medias de otro día (corte de las 05:00) no se reutiliza.
+  const hoyIso = isoDia(new Date()), ayerIso = diasAtras(1);
+  if (eligioEn !== hoyIso || ![hoyIso, ayerIso].includes(elegida)) { elegida = null; eligioEn = null; }
+  const fecha = elegida || fechaCierrePorDefecto(estado.cierres);
+  const previo = estado.cierres.find(x => x.fecha === fecha);
+  const retro = fecha < fechaCierre();        // cierre de un día ya pasado: no toca el ayuno en curso
+  const pasado = fecha !== hoyIso;            // los rótulos hablan de ayer, no de hoy
+  const etiq = t => pasado ? t.replace(/\bhoy\b/, 'ayer') : t;
+  // Un formulario a medias de otro día no se reutiliza.
   if (form && formFecha !== fecha) { form = null; formFecha = null; editando = false; }
   const c = h('section', 'card'); c.appendChild(cabecera('Cierre del día'));
+  // Selector de día: si por la noche se olvida, por la mañana se registra el de ayer con su fecha.
+  const sel = h('div', 'opciones c2'); sel.style.marginBottom = '4px';
+  for (const [iso, nombre] of [[ayerIso, 'Ayer'], [hoyIso, 'Hoy']]) {
+    const hecho = estado.cierres.some(x => x.fecha === iso);
+    const b = h('button', null, nombre + ' · ' + diaSemana(iso) + (hecho ? ' ✓' : '')); b.type = 'button'; b.setAttribute('aria-pressed', iso === fecha ? 'true' : 'false');
+    b.onclick = () => { elegida = iso; eligioEn = hoyIso; form = null; formFecha = null; editando = false; repintar(); };
+    sel.appendChild(b);
+  }
+  c.appendChild(sel);
+  if (pasado && !previo) c.appendChild(h('div', 'lbl', 'Se guarda con la fecha de ayer.'));
+  const hoy = previo;
   if (hoy && !editando) {
     const ch = h('div', 'chips');
     [['Alcohol', hoy.alcohol], ['Café tarde', hoy.cafeina_tarde ? 'sí' : 'no'], ['Última comida', hoy.ultima_comida], ['Balance', ETIQ[hoy.balance] || '—'],
      ['Estrés', hoy.estres], ['Sensación', hoy.sensacion], ['Esfuerzo', hoy.rpe == null ? 'sin sesión' : hoy.rpe],
      ['Molestia', hoy.molestia + (hoy.molestia_zona ? ' · ' + hoy.molestia_zona : '')], ['Enfermo', hoy.enfermo ? 'sí' : 'no']]
       .forEach(([k, val]) => ch.appendChild(h('span', 'chip', k + ': ' + val)));
-    const e = h('button', 'btn', 'Editar'); e.onclick = () => { editando = true; form = null; formFecha = null; repintar(); };
+    const e = h('button', 'btn', 'Editar'); e.onclick = () => { editando = true; form = null; formFecha = null; elegida = fecha; eligioEn = hoyIso; repintar(); };
     c.appendChild(ch); c.appendChild(e); return c;
   }
   if (!form) { form = { alcohol: null, cafeina_tarde: null, balance: null, estres: null, sensacion: null, rpe: undefined, molestia: null, enfermo: null, ultima_comida: '', molestia_zona: '' }; formFecha = fecha; if (hoy) Object.assign(form, hoy); }
@@ -81,7 +100,7 @@ function tarjetaCierre(estado, recargar, repintar) {
   const completo = () => form.alcohol !== null && form.cafeina_tarde !== null && form.ultima_comida && form.balance && form.estres && form.sensacion && form.rpe !== undefined && form.molestia && form.enfermo !== null;
   const zona = h('input'); zona.type = 'text'; zona.placeholder = 'Zona (opcional)'; zona.value = form.molestia_zona || ''; zona.oninput = () => { form.molestia_zona = zona.value; };
   for (const [campo, titulo, cols, ops, ayuda] of PREGUNTAS) {
-    const q = h('div', 'q'); const t = h('span', 't', titulo); if (ayuda) { t.appendChild(document.createTextNode(' ')); t.appendChild(h('small', null, ayuda)); } q.appendChild(t);
+    const q = h('div', 'q'); const t = h('span', 't', etiq(titulo)); if (ayuda) { t.appendChild(document.createTextNode(' ')); t.appendChild(h('small', null, etiq(ayuda))); } q.appendChild(t);
     const g = h('div', 'opciones ' + cols);
     for (const [val, et] of ops) { const b = h('button', null, et); b.type = 'button'; b.setAttribute('aria-pressed', form[campo] === val ? 'true' : 'false');
       b.onclick = () => { form[campo] = val; g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); zona.hidden = !(form.molestia === 'leve' || form.molestia === 'limita'); guardar.disabled = !completo(); }; g.appendChild(b); }
@@ -98,10 +117,11 @@ function tarjetaCierre(estado, recargar, repintar) {
         rpe: form.rpe, molestia: form.molestia, molestia_zona: zona.hidden ? '' : (form.molestia_zona || '').trim(), enfermo: form.enfermo };
       await guardarCierre(fila);
       const inicio = inicioDesdeComida(fecha, form.ultima_comida);
-      if (!estado.ayunoActual || estado.ayunoActual.inicio !== inicio) await empezarAyuno(inicio);
+      const yaRoto = estado.ayunos.some(x => x.fin > inicio);
+      if (retro ? (!estado.ayunoActual && !yaRoto) : (!estado.ayunoActual || estado.ayunoActual.inicio !== inicio)) await empezarAyuno(inicio);
       // Solo tras guardar: así un fallo no pierde lo escrito. Hay que soltar el formulario antes de recargar,
       // porque el repintado que hace recargar debe mostrar los chips y no el formulario.
-      form = null; formFecha = null; editando = false;
+      form = null; formFecha = null; editando = false; elegida = fecha; eligioEn = hoyIso;
     } catch (e) { m.className = 'msg err'; m.textContent = e.message || String(e); guardar.disabled = false; return; }
     try { await recargar(); }
     catch (e) { m.className = 'msg err'; m.textContent = 'Cierre guardado. No se han podido recargar los datos.'; }
@@ -118,8 +138,9 @@ function franjaEstado(estado, ir) {
   const rec = estadoFatiga(r && r.datos.fatiga, estado.cierres, desde).estado;
   const b = h('button'); b.type = 'button'; b.setAttribute('aria-label', 'Recuperación ' + NOMBRE_ESTADO[rec] + '. Ver Fatiga');
   b.append(punto(rec, true), h('span', null, 'Recuperación ' + NOMBRE_ESTADO[rec])); b.onclick = () => ir('fatiga');
-  const hecho = estado.cierres.some(x => x.fecha === fechaCierre());
-  const c = h('div'); c.append(punto(hecho ? 'verde' : 'ambar', true), h('span', null, 'Cierre ' + (hecho ? 'hecho' : 'pendiente')));
+  const dia = fechaCierrePorDefecto(estado.cierres), hecho = estado.cierres.some(x => x.fecha === dia);
+  const deAyer = dia === diasAtras(1) && new Date().getHours() >= 5;
+  const c = h('div'); c.append(punto(hecho ? 'verde' : 'ambar', true), h('span', null, 'Cierre ' + (deAyer ? 'de ayer ' : '') + (hecho ? 'hecho' : 'pendiente')));
   f.append(b, c); caja.appendChild(f);
   const pie = [vivo ? 'Síntomas en un cierre reciente' : '', r && r.datos_hasta ? 'datos del ' + fechaCorta(r.datos_hasta) : ''].filter(Boolean).join(' · ');
   if (pie) caja.appendChild(h('div', 'franja-pie', pie.charAt(0).toUpperCase() + pie.slice(1)));

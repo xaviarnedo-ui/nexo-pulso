@@ -4,6 +4,14 @@ export const isoLocal = d => isoDia(d) + 'T' + pad(d.getHours()) + ':' + pad(d.g
 export const ahoraHHMM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
 export const fechaCierre = () => { const d = new Date(); if (d.getHours() < 5) d.setDate(d.getDate() - 1); return isoDia(d); };
 export const diasAtras = n => { const d = new Date(); d.setDate(d.getDate() - n); return isoDia(d); };
+// Día al que corresponde el cierre cuando se abre la app: de madrugada (antes de las 05:00) y por la mañana (antes de las 12:00)
+// con el de ayer sin hacer, es el de ayer; en cualquier otro caso, el de hoy. Siempre se puede cambiar a mano en la tarjeta.
+export const fechaCierrePorDefecto = (cierres, ahora = new Date()) => {
+  const ayer = new Date(ahora); ayer.setDate(ayer.getDate() - 1);
+  const f = isoDia(ayer);
+  if (ahora.getHours() < 5) return f;
+  return ahora.getHours() < 12 && !cierres.some(x => x.fecha === f) ? f : isoDia(ahora);
+};
 export const num = (v, dec = 1) => v == null || isNaN(v) ? '·' : Number(v).toFixed(dec).replace('.', ',');
 export const fmtFecha = s => new Date(s + 'T12:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
 export function h(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
