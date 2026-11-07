@@ -1,6 +1,6 @@
 import { h, CLAVE_DIA, fechaCorta } from './util.js';
 
-const NOMBRE_TIPO = { entreno: 'Entreno', partido: 'Partido', descanso: 'Descanso' };
+const NOMBRE_TIPO = { entreno: 'Entreno', partido: 'Partido', recuperacion: 'Recuperac.', descanso: 'Descanso' };
 let tipoElegido = null, varianteElegida = 0;
 
 const cab = (t, pie) => { const c = h('div', 'cabecera'); c.appendChild(h('h2', null, t)); if (pie) c.appendChild(h('span', 'pie', pie)); return c; };
@@ -24,6 +24,7 @@ export function pintar(v, estado) {
   if (m.objetivo && m.objetivo.texto) o.appendChild(h('div', 'pie', m.objetivo.texto));
   v.appendChild(o);
 
+  if (hoyClave === 'lun' && m.tipos.recuperacion) v.appendChild(h('div', 'lbl', 'Es lunes: si jugaste ayer, elige Recuperación; si no, Entreno.'));
   const sel = h('div', 'opciones c' + Math.min(4, tipos.length));
   tipos.forEach(k => { const b = h('button', null, NOMBRE_TIPO[k] || k); b.type = 'button'; b.setAttribute('aria-pressed', k === tipoElegido ? 'true' : 'false'); b.onclick = () => { tipoElegido = k; varianteElegida = 0; repintar(); }; sel.appendChild(b); });
   v.appendChild(sel);
