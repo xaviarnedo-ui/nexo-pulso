@@ -1,0 +1,2 @@
+export const SUPABASE_URL = 'https://lunaktorykgmhejojiai.supabase.co';
+export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1bmFrdG9yeWtnbWhlam9qaWFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTg0NzgsImV4cCI6MjEwNzEzNDQ3OH0.BYIZrNLi4br2IVYP2vRe-r1vn_m2G5fyxaxMjGdaJZE';
