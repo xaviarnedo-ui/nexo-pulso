@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>Mi semana normal · NEXO Performance</title>
+<style>
+:root{
+  --bg:#F7F6F2; --card:#FFFFFF; --ink:#1C2A27; --muted:#5A6965; --line:#D8DFDC;
+  --acc:#1B6E62; --acc-ink:#FFFFFF; --soft:#E3F0EC; --warn:#8A5200; --warn-soft:#FBF0DB;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0F1A18; --card:#17241F; --ink:#E7EEEB; --muted:#9FB1AB; --line:#2A3A35;
+    --acc:#3FA593; --acc-ink:#06201B; --soft:#1B3029; --warn:#E7B766; --warn-soft:#33280F;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px calc(48px + env(safe-area-inset-bottom))}
+header{padding:28px 0 8px}
+.brand{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);font-weight:700}
+h1{font:600 34px/1.1 var(--serif);margin:8px 0 12px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.priv{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:14px;margin:16px 0}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px;border-bottom:1px solid var(--line);margin:0 0 14px}
+.bar .row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px}
+.track{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.fill{height:100%;width:0;background:var(--acc);transition:width .25s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px}
+.card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;min-height:56px;font:600 18px var(--serif);scroll-margin-top:64px}
+.card>summary::-webkit-details-marker{display:none}
+.card>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 2px 0 8px;flex:none}
+.card[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+.st{margin-left:auto;font:600 12px var(--sans);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.st.empty{background:var(--line);color:var(--muted)}
+.st.part{background:var(--warn-soft);color:var(--warn)}
+.st.ok{background:var(--soft);color:var(--acc)}
+.body{padding:2px 16px 16px;border-top:1px solid var(--line)}
+label{display:block;font-weight:600;font-size:15px;margin:16px 0 6px}
+label small{font-weight:400;color:var(--muted)}
+input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:46px}
+textarea{resize:vertical;min-height:70px}
+input:focus,select:focus,textarea:focus,button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+input[type=time]{max-width:180px}
+input[type=number]{max-width:120px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--acc);background:transparent;color:var(--acc);font:600 16px var(--sans);cursor:pointer;text-decoration:none}
+.btn.main{background:var(--acc);color:var(--acc-ink)}
+.btn.small{min-height:40px;font-size:14px;padding:0 14px}
+.btn.quiet{border-color:var(--line);color:var(--muted)}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.send{padding:16px}
+.send h2{font:600 22px var(--serif);margin:0 0 8px}
+pre{white-space:pre-wrap;word-break:break-word;font:13px/1.45 ui-monospace,Menlo,monospace;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0 0;max-height:320px;overflow:auto}
+.msg{min-height:22px;font-size:14px;color:var(--acc);margin-top:10px}
+.foot{font-size:13px;color:var(--muted);margin-top:20px}
+.save{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">NEXO Performance</div>
+  <h1>Mi semana normal</h1>
+  <p>Cuéntame cómo es una semana normal tuya, día a día. No hay respuestas buenas ni malas: escribe lo que haces de verdad, no lo que crees que deberías hacer. Son unos 15 minutos y puedes hacerlo en varios ratos.</p>
+  <p class="muted">Si un día es igual que el anterior, usa el botón de copiar que hay al principio de cada día y cambia solo lo que sea distinto.</p>
+  <div class="priv"><strong>Privado.</strong> Lo que escribes se guarda solo en tu móvil y no se envía a ningún servidor. Solo sale cuando tú pulsas Enviar y eliges el chat con Xavi.</div>
+  <noscript><p><strong>Esta hoja necesita JavaScript activado en el navegador.</strong></p></noscript>
+</header>
+
+<label for="nombre" style="margin-top:4px">Tu nombre</label>
+<input id="nombre" type="text" autocomplete="given-name" enterkeyhint="next" placeholder="Nombre">
+
+<div class="bar" aria-live="polite">
+  <div class="row"><span id="prog">0 de 7 días listos</span><span class="save" id="save">Se guarda solo en este móvil</span></div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+</div>
+
+<div id="dias"></div>
+
+<details class="card" id="tu">
+  <summary>Sobre ti <span class="st empty" id="st-tu">Sin rellenar</span></summary>
+  <div class="body" id="tu-body"></div>
+</details>
+
+<section class="card send" aria-labelledby="h-send">
+  <h2 id="h-send">Enviar a Xavi</h2>
+  <p>Cuando termines, pulsa <strong>Enviar</strong> y elige WhatsApp, en el chat con Xavi. Si no te sale esa opción, pulsa <strong>Copiar</strong> y pega el texto en el chat.</p>
+  <div id="faltan" class="muted" style="font-size:14px"></div>
+  <div class="acts">
+    <button class="btn main" id="b-enviar" type="button">Enviar</button>
+    <button class="btn" id="b-copiar" type="button">Copiar</button>
+    <a class="btn quiet" href="https://wa.me/34666791332" target="_blank" rel="noopener">Abrir chat con Xavi</a>
+  </div>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  <details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:14px;min-height:40px;display:flex;align-items:center">Ver el texto que se envía</summary><pre id="vista"></pre></details>
+  <div class="acts"><button class="btn quiet small" id="b-borrar" type="button">Borrar todo de este móvil</button></div>
+  <p class="foot">Cuando Xavi confirme que lo ha recibido, pulsa «Borrar todo de este móvil».</p>
+</section>
+</div>
+
+<script>
+(function(){
+'use strict';
+var KEY='nexo_semana_normal_v1';
+var DIAS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+var DEPORTE=['','Entrenamiento del equipo','Partido','Gimnasio o fuerza por mi cuenta','Entrenamiento del equipo y gimnasio','Descanso','Otro'];
+var CAMPOS=[
+ {k:'levanta',t:'time',l:'Hora a la que te levantas',core:1},
+ {k:'estudio',t:'text',l:'Estudios o trabajo',s:'horario',ph:'Ej.: 8:30 a 14:30, instituto'},
+ {k:'deporte',t:'select',l:'Qué toca hoy en deporte',core:1},
+ {k:'detalle',t:'text',l:'Hora y qué haces',s:'si hoy hay deporte',ph:'Ej.: 18:00 a 19:30, entreno'},
+ {k:'desayuno',t:'area',l:'Desayuno',s:'qué y a qué hora',ph:'Ej.: 8:00, leche con cereales y un plátano',core:1},
+ {k:'comida',t:'area',l:'Comida',s:'qué y a qué hora',ph:'Ej.: 14:30, arroz con pollo y fruta',core:1},
+ {k:'merienda',t:'area',l:'Merienda o algo entre horas',s:'si tomas',ph:'Ej.: 17:30, bocadillo'},
+ {k:'cena',t:'area',l:'Cena',s:'qué y a qué hora',ph:'Ej.: 21:30, tortilla y ensalada',core:1},
+ {k:'cierre',t:'time',l:'Cierre del día',s:'hora a la que te acuestas',core:1}
+];
+var TU=[
+ {k:'objetivo',t:'area',l:'¿Qué quieres conseguir esta temporada?',o:'Quiero conseguir esta temporada'},
+ {k:'molestias',t:'area',l:'Molestias o lesiones que tienes ahora',s:'si no hay, escribe «ninguna»',o:'Molestias o lesiones ahora'},
+ {k:'lesiones',t:'area',l:'Lesiones anteriores importantes',s:'qué fue y cuándo',o:'Lesiones anteriores importantes'},
+ {k:'bebidas',t:'area',l:'Qué bebes en un día normal',s:'agua, café, té, bebidas energéticas o con azúcar',o:'Lo que bebo en un día normal'},
+ {k:'otros',t:'area',l:'Suplementos, medicación o alergias',s:'si prefieres no escribirlo, déjalo en blanco y lo hablamos',o:'Suplementos, medicación o alergias'},
+ {k:'energia',t:'num',l:'Energía al levantarte, de 0 a 10',o:'Energía al levantarme (0 a 10)'},
+ {k:'estres',t:'num',l:'Estrés o carga mental estos días, de 0 a 10',o:'Estrés o carga mental estos días (0 a 10)'},
+ {k:'mas',t:'area',l:'Algo más que quieras que sepa',o:'Algo más que quiero que sepas'}
+];
+var state=load()||{nombre:'',dias:[],tu:{}};
+while(state.dias.length<7) state.dias.push({});
+var els={dias:[],tu:{}};
+var $=function(id){return document.getElementById(id)};
+function load(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+var timer=null;
+function save(){
+  clearTimeout(timer);
+  timer=setTimeout(function(){
+    try{localStorage.setItem(KEY,JSON.stringify(state));$('save').textContent='Guardado en este móvil'}
+    catch(e){$('save').textContent='No se puede guardar aquí: no cierres la página hasta enviar'}
+  },250);
+}
+function field(c,id,val,onChange){
+  var w=document.createElement('div');
+  var lab=document.createElement('label');lab.htmlFor=id;lab.appendChild(document.createTextNode(c.l));
+  if(c.s){var sm=document.createElement('small');sm.textContent=' ('+c.s+')';lab.appendChild(sm)}
+  var el;
+  if(c.t==='select'){el=document.createElement('select');DEPORTE.forEach(function(o){var op=document.createElement('option');op.value=o;op.textContent=o||'Elige una opción';el.appendChild(op)})}
+  else if(c.t==='area'){el=document.createElement('textarea');el.rows=2}
+  else if(c.t==='num'){el=document.createElement('input');el.type='number';el.min=0;el.max=10;el.step=1;el.inputMode='numeric'}
+  else{el=document.createElement('input');el.type=c.t}
+  el.id=id;if(c.ph)el.placeholder=c.ph;
+  if(c.t==='text'||c.t==='area'){el.autocomplete='off'}
+  el.value=val||'';
+  el.addEventListener('input',function(){onChange(el.value)});
+  el.addEventListener('change',function(){onChange(el.value)});
+  w.appendChild(lab);w.appendChild(el);
+  return {wrap:w,el:el};
+}
+function has(o,list){return list.some(function(c){return (o[c.k]||'').toString().trim()})}
+function dayStatus(i){
+  var d=state.dias[i];
+  if(!has(d,CAMPOS))return['empty','Sin rellenar'];
+  var falta=CAMPOS.some(function(c){return c.core&&!(d[c.k]||'').trim()});
+  return falta?['part','Falta algo']:['ok','Listo'];
+}
+function refresh(){
+  var listos=0,faltan=[];
+  for(var i=0;i<7;i++){
+    var s=dayStatus(i),b=$('st-'+i);b.className='st '+s[0];b.textContent=s[1];
+    if(s[0]==='ok')listos++;else faltan.push(DIAS[i].toLowerCase());
+  }
+  var tu=has(state.tu,TU),b2=$('st-tu');b2.className='st '+(tu?'ok':'empty');b2.textContent=tu?'Listo':'Sin rellenar';
+  $('prog').textContent=listos+' de 7 días listos';
+  $('fill').style.width=(listos/7*100)+'%';
+  $('faltan').textContent=faltan.length?'Aún falta algo en: '+faltan.join(', ')+'. Puedes enviarlo igualmente y lo completamos hablando.':'Los siete días están listos.';
+  $('vista').textContent=texto();
+}
+function onData(){save();refresh()}
+function texto(){
+  var L=[],n=(state.nombre||'').trim();
+  L.push('MI SEMANA NORMAL'+(n?' · '+n:''));L.push('');
+  DIAS.forEach(function(nombre,i){
+    var d=state.dias[i],r=[];
+    if(d.levanta)r.push('Me levanto: '+d.levanta);
+    if(d.estudio)r.push('Estudios o trabajo: '+d.estudio);
+    var dep=[d.deporte,d.detalle].filter(Boolean).join(' · ');
+    if(dep)r.push('Deporte: '+dep);
+    if(d.desayuno)r.push('Desayuno: '+d.desayuno);
+    if(d.comida)r.push('Comida: '+d.comida);
+    if(d.merienda)r.push('Merienda o entre horas: '+d.merienda);
+    if(d.cena)r.push('Cena: '+d.cena);
+    if(d.cierre)r.push('Cierre del día, me acuesto a las: '+d.cierre);
+    if(!r.length)r.push('(sin rellenar)');
+    L.push(nombre.toUpperCase());r.forEach(function(x){L.push('- '+x)});L.push('');
+  });
+  var t=[];
+  TU.forEach(function(c){var v=(state.tu[c.k]||'').toString().trim();if(v)t.push('- '+(c.o||c.l)+': '+v)});
+  if(t.length){L.push('SOBRE MÍ');t.forEach(function(x){L.push(x)})}
+  return L.join('\n').trim();
+}
+function build(){
+  var cont=$('dias');
+  DIAS.forEach(function(nombre,i){
+    var det=document.createElement('details');det.className='card';det.id='dia-'+i;
+    var sum=document.createElement('summary');
+    sum.appendChild(document.createTextNode(nombre));
+    var st=document.createElement('span');st.id='st-'+i;st.className='st empty';st.textContent='Sin rellenar';sum.appendChild(st);
+    det.appendChild(sum);
+    var body=document.createElement('div');body.className='body';
+    els.dias[i]={};
+    if(i>0){
+      var cp=document.createElement('button');cp.type='button';cp.className='btn small';cp.style.marginTop='14px';
+      cp.textContent='Copiar del '+DIAS[i-1].toLowerCase();
+      cp.addEventListener('click',function(){
+        if(has(state.dias[i],CAMPOS)&&!window.confirm('Esto reemplaza lo que ya escribiste en este día. ¿Seguir?'))return;
+        state.dias[i]=JSON.parse(JSON.stringify(state.dias[i-1]));
+        CAMPOS.forEach(function(c){els.dias[i][c.k].value=state.dias[i][c.k]||''});
+        onData();
+      });
+      body.appendChild(cp);
+    }
+    CAMPOS.forEach(function(c){
+      var f=field(c,'d'+i+'-'+c.k,state.dias[i][c.k],function(v){state.dias[i][c.k]=v;onData()});
+      els.dias[i][c.k]=f.el;body.appendChild(f.wrap);
+    });
+    var acts=document.createElement('div');acts.className='acts';
+    var nx=document.createElement('button');nx.type='button';nx.className='btn main';
+    nx.textContent=i<6?'Siguiente: '+DIAS[i+1].toLowerCase():'Siguiente: sobre ti';
+    nx.addEventListener('click',function(){var t=i<6?$('dia-'+(i+1)):$('tu');t.open=true});
+    acts.appendChild(nx);body.appendChild(acts);
+    det.appendChild(body);cont.appendChild(det);
+  });
+  var tb=$('tu-body');
+  TU.forEach(function(c){
+    var f=field(c,'tu-'+c.k,state.tu[c.k],function(v){state.tu[c.k]=v;onData()});
+    els.tu[c.k]=f.el;tb.appendChild(f.wrap);
+  });
+  var acts=document.createElement('div');acts.className='acts';
+  var fin=document.createElement('button');fin.type='button';fin.className='btn main';fin.textContent='Ir a enviar';
+  fin.addEventListener('click',function(){$('tu').open=false;$('h-send').scrollIntoView({behavior:'smooth',block:'start'})});
+  acts.appendChild(fin);tb.appendChild(acts);
+  // un solo apartado abierto a la vez
+  var todos=[].slice.call(document.querySelectorAll('details.card'));
+  todos.forEach(function(d){
+    d.addEventListener('toggle',function(){
+      if(!d.open)return;
+      todos.forEach(function(o){if(o!==d)o.open=false});
+      d.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+}
+function nombreOk(){
+  if((state.nombre||'').trim())return true;
+  $('msg').textContent='Escribe tu nombre arriba antes de enviar.';
+  $('nombre').scrollIntoView({behavior:'smooth',block:'center'});$('nombre').focus();
+  return false;
+}
+function copiar(){
+  if(!nombreOk())return Promise.resolve();
+  var t=texto();
+  var ok=function(){$('msg').textContent='Copiado. Ahora pégalo en el chat con Xavi.'};
+  var no=function(){
+    $('msg').textContent='No he podido copiarlo solo. Abre «Ver el texto que se envía», mantén pulsado, selecciona todo y copia.';
+    var d=$('vista').parentNode;d.open=true;
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){return navigator.clipboard.writeText(t).then(ok,no)}
+  no();return Promise.resolve();
+}
+function enviar(){
+  if(!nombreOk())return;
+  var t=texto();
+  if(navigator.share){
+    navigator.share({text:t}).then(function(){$('msg').textContent='Listo. Comprueba que el mensaje está en el chat con Xavi.'},function(e){
+      if(e&&e.name==='AbortError')return;
+      copiar();
+    });
+  }else{copiar()}
+}
+function borrar(){
+  if(!window.confirm('Se borra todo lo que has escrito en este móvil. ¿Seguro?'))return;
+  try{localStorage.removeItem(KEY)}catch(e){}
+  state={nombre:'',dias:[{},{},{},{},{},{},{}],tu:{}};
+  location.reload();
+}
+build();
+$('nombre').value=state.nombre||'';
+$('nombre').addEventListener('input',function(){state.nombre=this.value;onData()});
+$('b-enviar').addEventListener('click',enviar);
+$('b-copiar').addEventListener('click',copiar);
+$('b-borrar').addEventListener('click',borrar);
+refresh();
+var primero=-1;for(var i=0;i<7;i++){if(dayStatus(i)[0]!=='ok'){primero=i;break}}
+if(primero>=0)$('dia-'+primero).open=true;
+})();
+</script>
+</body>
+</html>
