@@ -73,6 +73,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:13px/1.45 ui-monospace,Menlo
 .msg{min-height:22px;font-size:14px;color:var(--acc);margin-top:10px}
 .foot{font-size:13px;color:var(--muted);margin-top:20px}
 .save{font-size:12px;color:var(--muted)}
+.estado{font-size:14px;color:var(--acc);font-weight:600;margin:6px 0 0}
 .cr{display:flex;align-items:center;gap:8px;margin:6px 0}
 .cr b{width:16px;font-size:12px;color:var(--muted);text-align:center;flex:none}
 .b24{position:relative;flex:1;height:26px;border-radius:6px;background:var(--track);overflow:hidden}
@@ -92,9 +93,8 @@ pre{white-space:pre-wrap;word-break:break-word;font:13px/1.45 ui-monospace,Menlo
 <header>
   <div class="brand">NEXO Performance</div>
   <h1>Mi semana normal</h1>
-  <p>Con esto voy a montar tu cronograma: qué haces cada día y a qué hora, desde que te levantas hasta que te acuestas. Pon lo que haces de verdad, no lo que crees que deberías hacer. Son unos 15 minutos y puedes hacerlo en varios ratos.</p>
-  <p class="muted">Si un día es igual que el anterior, usa el botón de copiar que hay al principio de cada día y cambia solo lo que sea distinto.</p>
-  <div class="priv"><strong>Privado.</strong> Lo que escribes se guarda solo en tu móvil y no se envía a ningún servidor. Solo sale cuando tú pulsas Enviar y eliges el chat con Xavi.</div>
+  <p class="muted">Día a día y con horas.</p>
+  <div class="estado" id="estado-envio" hidden></div>
   <noscript><p><strong>Esta hoja necesita JavaScript activado en el navegador.</strong></p></noscript>
 </header>
 
@@ -102,7 +102,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:13px/1.45 ui-monospace,Menlo
 <input id="nombre" type="text" autocomplete="given-name" enterkeyhint="next" placeholder="Nombre">
 
 <div class="bar" aria-live="polite">
-  <div class="row"><span id="prog">0 de 7 días listos</span><span class="save" id="save">Se guarda solo en este móvil</span></div>
+  <div class="row"><span id="prog">0 de 7 días listos</span><span class="save" id="save"></span></div>
   <div class="track"><div class="fill" id="fill"></div></div>
 </div>
 
@@ -115,25 +115,24 @@ pre{white-space:pre-wrap;word-break:break-word;font:13px/1.45 ui-monospace,Menlo
 
 <section class="card pad" aria-labelledby="h-crono">
   <h2 id="h-crono">Mi cronograma</h2>
-  <p class="muted" style="font-size:14px">Así queda tu semana con lo que has escrito. Mira si falta alguna hora o algún día.</p>
   <div id="crono"></div>
   <div class="ejes" aria-hidden="true"><span style="left:0">0 h</span><span style="left:25%">6 h</span><span style="left:50%">12 h</span><span style="left:75%">18 h</span><span style="left:100%">24 h</span></div>
   <div class="ley" id="ley"></div>
 </section>
 
 <section class="card pad" aria-labelledby="h-send">
-  <h2 id="h-send">Enviar a Xavi</h2>
-  <p>Cuando termines, pulsa <strong>Enviar</strong> y elige WhatsApp, en el chat con Xavi. Si no te sale esa opción, pulsa <strong>Copiar</strong> y pega el texto en el chat.</p>
+  <h2 id="h-send">Enviar</h2>
   <div id="faltan" class="muted" style="font-size:14px"></div>
   <div class="acts">
     <button class="btn main" id="b-enviar" type="button">Enviar</button>
-    <button class="btn" id="b-copiar" type="button">Copiar</button>
-    <a class="btn quiet" href="https://wa.me/34666791332" target="_blank" rel="noopener">Abrir chat con Xavi</a>
+    <span id="wa-botones" style="display:contents">
+      <button class="btn" id="b-copiar" type="button">Copiar</button>
+      <a class="btn quiet" href="https://wa.me/34666791332" target="_blank" rel="noopener">Abrir WhatsApp</a>
+    </span>
   </div>
   <div class="msg" id="msg" role="status" aria-live="polite"></div>
-  <details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:14px;min-height:40px;display:flex;align-items:center">Ver el texto que se envía</summary><pre id="vista"></pre></details>
-  <div class="acts"><button class="btn quiet small" id="b-borrar" type="button">Borrar todo de este móvil</button></div>
-  <p class="foot">Cuando Xavi confirme que lo ha recibido, pulsa «Borrar todo de este móvil».</p>
+  <details id="alt" hidden style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:14px;min-height:40px;display:flex;align-items:center">WhatsApp</summary><div class="acts" id="alt-acts" style="margin-top:4px"></div></details>
+  <details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:14px;min-height:40px;display:flex;align-items:center">Ver texto</summary><pre id="vista"></pre></details>
 </section>
 </div>
 
@@ -162,13 +161,26 @@ var TU=[
  {k:'objetivo',t:'area',l:'¿Qué quieres conseguir esta temporada?',o:'Quiero conseguir esta temporada'},
  {k:'molestias',t:'area',l:'Molestias o lesiones que tienes ahora',s:'si no hay, escribe «ninguna»',o:'Molestias o lesiones ahora'},
  {k:'lesiones',t:'area',l:'Lesiones anteriores importantes',s:'qué fue y cuándo',o:'Lesiones anteriores importantes'},
- {k:'bebidas',t:'area',l:'Qué bebes en un día normal',s:'agua, café, té, bebidas energéticas o con azúcar',o:'Lo que bebo en un día normal'},
- {k:'otros',t:'area',l:'Suplementos, medicación o alergias',s:'si prefieres no escribirlo, déjalo en blanco y lo hablamos',o:'Suplementos, medicación o alergias'},
+ {k:'bebidas',t:'area',l:'Qué bebes en un día normal',s:'agua, café, energéticas…',o:'Lo que bebo en un día normal'},
+ {k:'otros',t:'area',l:'Suplementos, medicación o alergias',s:'opcional',o:'Suplementos, medicación o alergias'},
  {k:'energia',t:'num',l:'Energía al levantarte, de 0 a 10',o:'Energía al levantarme (0 a 10)'},
  {k:'estres',t:'num',l:'Estrés o carga mental estos días, de 0 a 10',o:'Estrés o carga mental estos días (0 a 10)'},
  {k:'mas',t:'area',l:'Algo más que quieras que sepa',o:'Algo más que quiero que sepas'}
 ];
 var $=function(id){return document.getElementById(id)};
+/* Enlace personal (?t=...): si lo hay, se envía directo a Pulso (Supabase UE) y no por WhatsApp. La clave anon es pública por diseño. */
+var SB_URL='https://lunaktorykgmhejojiai.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1bmFrdG9yeWtnbWhlam9qaWFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTg0NzgsImV4cCI6MjEwNzEzNDQ3OH0.BYIZrNLi4br2IVYP2vRe-r1vn_m2G5fyxaxMjGdaJZE',TKEY='nexo_cliente_token',TIPO='semana';
+var token=null,modoApp=false,primerNombre='';
+(function(){
+  var t=null;try{t=new URLSearchParams(location.search).get('t')}catch(e){}
+  try{if(t){localStorage.setItem(TKEY,t);history.replaceState(null,'',location.pathname)}else t=localStorage.getItem(TKEY)}catch(e){}
+  token=t||null;
+})();
+function rpc(fn,args){
+  return fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)})
+    .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.text()}).then(function(t){return t?JSON.parse(t):null});
+}
+function cuando(iso){try{return new Date(iso).toLocaleString('es-ES',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}}
 function vacio(){return{levanta:'',cierre:'',descanso:false,com:{},acts:[]}}
 function norm(s){
   s=(s&&typeof s==='object')?s:{};
@@ -185,7 +197,7 @@ var timer=null;
 function save(){
   clearTimeout(timer);
   timer=setTimeout(function(){
-    try{localStorage.setItem(KEY,JSON.stringify(state));$('save').textContent='Guardado en este móvil'}
+    try{localStorage.setItem(KEY,JSON.stringify(state));$('save').textContent='Guardado'}
     catch(e){$('save').textContent='No se puede guardar aquí: no cierres la página hasta enviar'}
   },250);
 }
@@ -212,7 +224,7 @@ function refresh(){
   var tu=hasTu(),b2=$('st-tu');b2.className='st '+(tu?'ok':'empty');b2.textContent=tu?'Listo':'Sin rellenar';
   $('prog').textContent=listos+' de 7 días listos';
   $('fill').style.width=(listos/7*100)+'%';
-  $('faltan').textContent=faltan.length?'Aún falta algo en: '+faltan.join(', ')+'. Puedes enviarlo igualmente y lo completamos hablando.':'Los siete días están listos.';
+  $('faltan').textContent=faltan.length?'Falta algo en: '+faltan.join(', ')+'.':'';
   $('vista').textContent=texto();
   crono();
 }
@@ -311,8 +323,7 @@ function fillBody(i){
   body.appendChild(lab('d'+i+'-lev','Hora a la que te levantas'));
   var g=el('div');g.style.maxWidth='180px';g.appendChild(timeIn('d'+i+'-lev',d.levanta,function(v){d.levanta=v;onData()}));body.appendChild(g);
 
-  body.appendChild(el('h3',null,'Estudios, entrenos y otras cosas con horario'));
-  body.appendChild(el('p','muted','Añade una actividad por cada cosa del día: clase, trabajo, entreno, partido, gimnasio, viaje… Pon la hora de inicio y la de fin.')).style.fontSize='14px';
+  body.appendChild(el('h3',null,'Actividades'));
   d.acts.forEach(function(a,j){
     var b=el('div','act'),id='d'+i+'-a'+j;
     b.appendChild(lab(id+'-t','¿Qué es?'));
@@ -346,7 +357,6 @@ function fillBody(i){
   body.appendChild(ck);
 
   body.appendChild(el('h3',null,'Comidas'));
-  body.appendChild(el('p','muted','La hora y qué tomas.')).style.fontSize='14px';
   COMIDAS.forEach(function(c){
     var m=com(d,c.k),id='d'+i+'-'+c.k;
     body.appendChild(lab(id+'-h',c.n,c.s));
@@ -407,36 +417,75 @@ function nombreOk(){
 function copiar(){
   if(!nombreOk())return Promise.resolve();
   var t=texto();
-  var ok=function(){$('msg').textContent='Copiado. Ahora pégalo en el chat con Xavi.'};
+  var ok=function(){$('msg').textContent='Copiado.'};
   var no=function(){
-    $('msg').textContent='No he podido copiarlo solo. Abre «Ver el texto que se envía», mantén pulsado, selecciona todo y copia.';
+    $('msg').textContent='No he podido copiarlo. Abre «Ver texto», selecciónalo y cópialo.';
     $('vista').parentNode.open=true;
   };
   if(navigator.clipboard&&navigator.clipboard.writeText){return navigator.clipboard.writeText(t).then(ok,no)}
   no();return Promise.resolve();
 }
-function enviar(){
+function compartir(){
   if(!nombreOk())return;
   var t=texto();
   if(navigator.share){
-    navigator.share({text:t}).then(function(){$('msg').textContent='Listo. Comprueba que el mensaje está en el chat con Xavi.'},function(e){
+    navigator.share({text:t}).then(function(){$('msg').textContent='Listo.'},function(e){
       if(e&&e.name==='AbortError')return;
       copiar();
     });
   }else{copiar()}
 }
-function borrar(){
-  if(!window.confirm('Se borra todo lo que has escrito en este móvil. ¿Seguro?'))return;
-  try{localStorage.removeItem(KEY)}catch(e){}
-  location.reload();
+function marca(iso){var b=$('estado-envio');b.textContent=iso?'Enviado el '+cuando(iso)+'.':'';b.hidden=!iso}
+function enviarApp(){
+  if(!nombreOk())return;
+  var b=$('b-enviar');b.disabled=true;$('msg').textContent='Enviando…';
+  rpc('cli_guardar',{p_token:token,p_tipo:TIPO,p_resp:{v:2,datos:{nombre:state.nombre,dias:state.dias,tu:state.tu},texto:texto()}}).then(function(){
+    b.disabled=false;$('msg').textContent='Enviado.';marca(new Date().toISOString());
+  },function(){
+    b.disabled=false;$('msg').textContent='No se ha podido enviar. Prueba otra vez o usa WhatsApp.';$('alt').open=true;
+  });
+}
+function enviar(){if(modoApp)enviarApp();else compartir()}
+function pasarAModoApp(on){
+  modoApp=on;
+  $('alt').hidden=!on;
+  if(on)$('alt-acts').appendChild($('wa-botones'));
+  else $('b-enviar').parentNode.appendChild($('wa-botones'));
+}
+function rehidratar(){
+  /* vuelve a pintar todo desde `state` (tras cargar lo enviado desde el servidor) */
+  for(var i=0;i<7;i++)fillBody(i);
+  var tb=$('tu-body');tb.textContent='';
+  TU.forEach(function(c){tb.appendChild(tuField(c))});
+  var acts=el('div','acts'),fin=el('button','btn main','Ir al cronograma');fin.type='button';
+  fin.addEventListener('click',function(){$('tu').open=false;$('h-crono').scrollIntoView({behavior:'smooth',block:'start'})});
+  acts.appendChild(fin);tb.appendChild(acts);
+  $('nombre').value=state.nombre||'';
+  refresh();
+}
+function arrancarApp(){
+  if(!token)return;
+  pasarAModoApp(true);marca(null);
+  rpc('cli_cargar',{p_token:token}).then(function(info){
+    if(!info){ /* enlace que ya no vale */
+      pasarAModoApp(false);try{localStorage.removeItem(TKEY)}catch(e){}token=null;
+      var b=$('estado-envio');b.textContent='Este enlace ya no vale.';b.hidden=false;return;
+    }
+    primerNombre=(info.nombre||'').split(' ')[0]||'';
+    if(!(state.nombre||'').trim()&&primerNombre){state.nombre=primerNombre;$('nombre').value=primerNombre}
+    var r=info.respuestas&&info.respuestas[TIPO];
+    var vacioLocal=!state.dias.some(hasDay)&&!hasTu();
+    if(r&&r.datos&&vacioLocal){state=norm(r.datos);if(!state.nombre)state.nombre=primerNombre;rehidratar();save()}
+    marca(r&&r.enviado?r.enviado:null);
+  },function(){ /* sin conexión: se puede seguir rellenando y enviar después */ });
 }
 build();
 $('nombre').value=state.nombre||'';
 $('nombre').addEventListener('input',function(){state.nombre=this.value;onData()});
 $('b-enviar').addEventListener('click',enviar);
 $('b-copiar').addEventListener('click',copiar);
-$('b-borrar').addEventListener('click',borrar);
 refresh();
+arrancarApp();
 var primero=-1;for(var i=0;i<7;i++){if(dayStatus(i)[0]!=='ok'){primero=i;break}}
 if(primero>=0)$('dia-'+primero).open=true;
 })();
