@@ -1,6 +1,6 @@
 import { h, CLAVE_DIA, fechaCorta } from './util.js';
 
-const NOMBRE_TIPO = { entreno: 'Entreno', partido: 'Partido', recuperacion: 'Recuperac.', descanso: 'Descanso' };
+const NOMBRE_TIPO = { entreno: 'Entreno', entreno_fuerte: 'Fuerte', vispera: 'Víspera', partido: 'Partido', recuperacion: 'Recuperac.', descanso: 'Descanso' };
 let tipoElegido = null, varianteElegida = 0;
 
 const cab = (t, pie) => { const c = h('div', 'cabecera'); c.appendChild(h('h2', null, t)); if (pie) c.appendChild(h('span', 'pie', pie)); return c; };
@@ -25,7 +25,7 @@ export function pintar(v, estado) {
   v.appendChild(o);
 
   if (hoyClave === 'lun' && m.tipos.recuperacion) v.appendChild(h('div', 'lbl', 'Es lunes: si jugaste ayer, elige Recuperación; si no, Entreno.'));
-  const sel = h('div', 'opciones c' + Math.min(4, tipos.length));
+  const sel = h('div', 'opciones c' + Math.min(6, tipos.length));
   tipos.forEach(k => { const b = h('button', null, NOMBRE_TIPO[k] || k); b.type = 'button'; b.setAttribute('aria-pressed', k === tipoElegido ? 'true' : 'false'); b.onclick = () => { tipoElegido = k; varianteElegida = 0; repintar(); }; sel.appendChild(b); });
   v.appendChild(sel);
   if (tipo.variantes.length > 1) {
@@ -39,11 +39,12 @@ export function pintar(v, estado) {
   if (tipo.nota) c.appendChild(h('div', 'lbl', tipo.nota));
   dia.comidas.forEach(co => {
     const bloque = h('div', 'comida'); const t = h('div', 'entre');
-    t.appendChild(h('span', 'subtitulo', co.nombre + (co.hora ? ' · ' + co.hora : ''))); if (co.kcal != null) t.appendChild(h('span', 'sec', co.kcal + ' kcal'));
+    t.appendChild(h('span', 'subtitulo', co.nombre + (co.hora ? ' · ' + co.hora : ''))); if (co.kcal) t.appendChild(h('span', 'sec', macros(co)));
     bloque.appendChild(t);
     co.platos.forEach(p => {
       if (typeof p === 'string') { bloque.appendChild(h('div', 'plato', p)); return; }
-      bloque.appendChild(h('div', 'plato-t', p.t)); (p.i || []).forEach(x => bloque.appendChild(h('div', 'plato', x)));
+      const tp = h('div', 'entre'); tp.appendChild(h('span', 'plato-t', p.t));
+      if (p.m && co.platos.length > 1) tp.appendChild(h('span', 'sec', macros({ kcal: p.m[0], p: p.m[1], c: p.m[2], g: p.m[3] }))); bloque.appendChild(tp); (p.i || []).forEach(x => bloque.appendChild(h('div', 'plato', x)));
     });
     c.appendChild(bloque);
   });
