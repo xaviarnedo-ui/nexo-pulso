@@ -46,3 +46,14 @@ export const ultimaComidaDe = (fecha, ayunoActual, ayunos) => {
   const t = [ayunoActual, ...(ayunos || [])].filter(Boolean).map(x => x.inicio).filter(i => fechaDeComida(i) === fecha).sort();
   return t.length ? t[t.length - 1].slice(11, 16) : null;
 };
+// Horas (2 decimales) entre dos "AAAA-MM-DDTHH:MM" locales.
+export const horasEntre = (inicio, fin) => Math.round((new Date(fin) - new Date(inicio)) / 36e3) / 100;
+// Al editar un ayuno a mano: el texto del error, o null si vale. Sin `fin` es el ayuno en curso (solo se mira el inicio).
+const FORMATO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+export const errorAyuno = (inicio, fin, ahora = new Date()) => {
+  if (!FORMATO.test(inicio || '') || (fin != null && !FORMATO.test(fin))) return 'Pon fecha y hora.';
+  if (fin != null && new Date(fin) <= new Date(inicio)) return 'El final tiene que ser posterior al inicio.';
+  if (new Date(fin || inicio) > ahora) return 'No puede estar en el futuro.';
+  if (fin != null && horasEntre(inicio, fin) > 72) return 'Más de 72 h: revisa las fechas.';
+  return null;
+};

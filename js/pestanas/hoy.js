@@ -1,5 +1,5 @@
-import { guardarCierre, empezarAyuno, romperAyuno, guardarAjustes, ponerUltimaComida } from '../datos.js';
-import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, fechaCierrePorDefecto, diasAtras, fechaCorta, breve, diaSemana, fechaDeComida, ultimaComidaDe } from '../util.js';
+import { guardarCierre, empezarAyuno, romperAyuno, editarAyuno, guardarAjustes, ponerUltimaComida } from '../datos.js';
+import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, fechaCierrePorDefecto, diasAtras, fechaCorta, breve, diaSemana, fechaDeComida, ultimaComidaDe, errorAyuno } from '../util.js';
 import { anillo, racha, punto } from '../graficos.js';
 import { cabecera } from '../filas.js';
 import { estadoFatiga, hayEnfermo } from '../semaforos.js';
@@ -53,6 +53,7 @@ function tarjetaAyuno(v, estado, recargar) {
     } catch (e) { avisoErr(e.message || String(e)); btn.disabled = false; }
   };
   const fila2 = h('div', 'fila'); q.classList.add('crece'); fila2.appendChild(q); c.appendChild(fila2); c.appendChild(btn); c.appendChild(m);
+  const corregir = editorAyunos(estado, recargar); if (corregir) c.appendChild(corregir);
   // El contador vive: cada 30 s redibuja el anillo y, si no se ha tocado la hora, la actualiza.
   // Se para cuando el anillo ya no está en la página (otra pestaña o repintado).
   clearInterval(tick);
@@ -62,6 +63,51 @@ function tarjetaAyuno(v, estado, recargar) {
     if (!horaTocada) hora.value = ahoraHHMM();
   }, 30000);
   return c;
+}
+
+// «Corregir horas» (plegado): el inicio del ayuno en curso y el inicio y el final de los 3 últimos ayunos hechos.
+const fechaHora = (etiqueta, valor) => {
+  const q = h('label', 'q'); q.appendChild(h('span', 't', etiqueta));
+  const i = h('input'); i.type = 'datetime-local'; i.value = valor; i.max = isoLocal(new Date()); q.appendChild(i);
+  return [q, i];
+};
+const cuando = iso => diaSemana(iso.slice(0, 10)) + ' ' + iso.slice(11);
+
+function editorAyunos(estado, recargar) {
+  const a = estado.ayunoActual;
+  const hechos = estado.ayunos.filter(x => x.fin).slice(0, 3);
+  if (!a && !hechos.length) return null;
+  const d = h('details', 'corregir'); d.appendChild(h('summary', 'lbl', 'Corregir horas'));
+  const l = h('div', 'lista'); d.appendChild(l);
+  const filas = (a ? [{ actual: true, inicio: a.inicio, texto: 'En curso · desde ' + cuando(a.inicio) }] : [])
+    .concat(hechos.map(x => ({ inicio: x.inicio, fin: x.fin, texto: cuando(x.inicio) + ' → ' + x.fin.slice(11) + ' · ' + num(x.horas) + ' h' })));
+  for (const x of filas) {
+    const fila = h('div', 'entre-bloque');
+    const cab = h('div', 'entre'); cab.appendChild(h('span', null, x.texto));
+    const abrir = h('button', 'btn', 'Editar'); cab.appendChild(abrir); fila.appendChild(cab);
+    const panel = h('div', 'panel-ayuno'); panel.hidden = true;
+    const [qi, ini] = fechaHora('Empezó (última comida)', x.inicio); panel.appendChild(qi);
+    let fin = null; if (!x.actual) { const [qf, f] = fechaHora('Terminó (primera comida)', x.fin); panel.appendChild(qf); fin = f; }
+    const botones = h('div', 'fila'); const guardar = h('button', 'btn primario', 'Guardar'); const cancelar = h('button', 'btn', 'Cancelar');
+    botones.appendChild(cancelar); botones.appendChild(guardar); panel.appendChild(botones);
+    const m = h('div', 'msg'); panel.appendChild(m);
+    abrir.onclick = () => { panel.hidden = false; abrir.hidden = true; };
+    cancelar.onclick = () => { panel.hidden = true; abrir.hidden = false; ini.value = x.inicio; if (fin) fin.value = x.fin; m.textContent = ''; };
+    guardar.onclick = async () => {
+      let err = errorAyuno(ini.value, fin ? fin.value : null);
+      if (!err && fin && a && fin.value > a.inicio) err = 'Se solapa con el ayuno en curso.';
+      if (err) { m.className = 'msg err'; m.textContent = err; return; }
+      guardar.disabled = true; m.className = 'msg'; m.textContent = '';
+      try {
+        if (x.actual) await empezarAyuno(ini.value);
+        else await editarAyuno(x.inicio, ini.value, fin.value);
+        await ponerUltimaComida(fechaDeComida(ini.value), ini.value.slice(11, 16));
+        await recargar();
+      } catch (e) { m.className = 'msg err'; m.textContent = e.message || String(e); guardar.disabled = false; }
+    };
+    fila.appendChild(panel); l.appendChild(fila);
+  }
+  return d;
 }
 
 function tarjetaCierre(estado, recargar, repintar) {

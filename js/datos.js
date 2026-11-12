@@ -1,4 +1,5 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import { horasEntre } from './util.js';
 
 export const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
 let _uid = null;
@@ -15,9 +16,13 @@ export async function ponerUltimaComida(fecha, hhmm) { ok(await sb.from('cierres
 export async function leerAyunoActual() { return ok(await sb.from('ayuno_actual').select('*').maybeSingle()); }
 export async function empezarAyuno(inicio) { ok(await sb.from('ayuno_actual').upsert({ user_id: _uid, inicio }, { onConflict: 'user_id' })); }
 export async function romperAyuno(inicio, fin) {
-  const horas = Math.round((new Date(fin) - new Date(inicio)) / 36e3) / 100;
-  ok(await sb.from('ayunos').upsert({ user_id: _uid, inicio, fin, horas }, { onConflict: 'user_id,inicio' }));
+  ok(await sb.from('ayunos').upsert({ user_id: _uid, inicio, fin, horas: horasEntre(inicio, fin) }, { onConflict: 'user_id,inicio' }));
   ok(await sb.from('ayuno_actual').delete().eq('user_id', _uid));
+}
+// Corregir un ayuno ya hecho. El inicio es parte de la clave: si cambia, se guarda el nuevo y luego se borra el viejo.
+export async function editarAyuno(inicioViejo, inicio, fin) {
+  ok(await sb.from('ayunos').upsert({ user_id: _uid, inicio, fin, horas: horasEntre(inicio, fin) }, { onConflict: 'user_id,inicio' }));
+  if (inicio !== inicioViejo) ok(await sb.from('ayunos').delete().eq('user_id', _uid).eq('inicio', inicioViejo));
 }
 export async function leerAyunos(desde) { return ok(await sb.from('ayunos').select('*').gte('inicio', desde).order('inicio', { ascending: false })); }
 export async function ultimoResumen() { return ok(await sb.from('resumenes').select('*').order('semana', { ascending: false }).limit(1).maybeSingle()); }

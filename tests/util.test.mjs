@@ -59,3 +59,22 @@ test('última comida de un día: del ayuno en curso o de los ya hechos; null si 
   assert.equal(ultimaComidaDe('2026-10-31', null, [{ inicio: '2026-10-31T20:00' }, { inicio: '2026-11-01T00:20' }]), '00:20');   // la más tardía
   assert.equal(ultimaComidaDe('2026-10-31', null, undefined), null);
 });
+
+test('horas entre dos horas locales de ayuno', async () => {
+  const { horasEntre } = await import('../js/util.js');
+  assert.equal(horasEntre('2026-11-11T20:38', '2026-11-12T07:33'), 10.92);
+  assert.equal(horasEntre('2026-11-10T20:50', '2026-11-11T09:02'), 12.2);
+});
+
+test('error al editar un ayuno: formato, orden, futuro y duración', async () => {
+  const { errorAyuno } = await import('../js/util.js');
+  const ahora = new Date(2026, 10, 12, 21, 0);
+  assert.equal(errorAyuno('2026-11-11T20:38', '2026-11-12T07:33', ahora), null);
+  assert.equal(errorAyuno('2026-11-12T20:30', null, ahora), null);                       // ayuno en curso: solo el inicio
+  assert.match(errorAyuno('', '2026-11-12T07:33', ahora), /fecha y hora/);
+  assert.match(errorAyuno('2026-11-12T07:33', '2026-11-12T07:33', ahora), /posterior/);
+  assert.match(errorAyuno('2026-11-12T07:33', '2026-11-11T20:00', ahora), /posterior/);
+  assert.match(errorAyuno('2026-11-12T21:30', null, ahora), /futuro/);
+  assert.match(errorAyuno('2026-11-11T20:00', '2026-11-12T21:30', ahora), /futuro/);
+  assert.match(errorAyuno('2026-11-08T20:00', '2026-11-12T08:00', ahora), /72 h/);
+});
