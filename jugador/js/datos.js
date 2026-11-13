@@ -6,6 +6,10 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:
 const CLAVE = 'pulso-jugador-token';
 let token = null;
 
+// iOS no comparte el almacenamiento entre Safari y la app de la pantalla de inicio: si el icono arranca sin enlace, el jugador pega el suyo.
+export const extraerToken = txt => { const m = String(txt || '').match(/[?&]t=([0-9a-f]{32,})/i) || String(txt || '').trim().match(/^([0-9a-f]{32,})$/i); return m ? m[1] : null; };
+export function guardarToken(t) { token = t; try { localStorage.setItem(CLAVE, t); } catch (e) { /* sin almacenamiento: vale para esta sesión */ } }
+
 export function leerToken() {
   const t = new URLSearchParams(location.search).get('t');
   try { if (t) localStorage.setItem(CLAVE, t); token = t || localStorage.getItem(CLAVE); } catch (e) { token = t; }

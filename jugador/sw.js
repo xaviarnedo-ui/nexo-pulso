@@ -1,6 +1,6 @@
 // Pulso · Jugador: caché de la interfaz (nunca de datos). Los datos van siempre por red.
-const CACHE = 'pulso-jugador-v4';
-const V = '?v=4';
+const CACHE = 'pulso-jugador-v5';
+const V = '?v=5';
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
 const BASE = ['./', 'index.html', 'styles.css' + V, 'js/app.js' + V, 'manifest.json']
   .concat(['config', 'util', 'datos', 'graficos', 'formulario', 'hoy', 'menu', 'perfil', 'avisos'].map(m => `js/${m}.js`));

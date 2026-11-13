@@ -1,4 +1,4 @@
-import { leerToken, cargar } from './datos.js';
+import { leerToken, cargar, extraerToken, guardarToken } from './datos.js';
 import { h } from './util.js';
 import * as hoy from './hoy.js';
 import * as menu from './menu.js';
@@ -51,8 +51,23 @@ tabs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => i
 document.addEventListener('visibilitychange', () => { if (!document.hidden && estado.perfil && !editandoForm && estado.formulario) recargar().catch(() => {}); });
 window.addEventListener('online', pintar); window.addEventListener('offline', pintar);
 
+function pedirEnlace() {
+  tabs.hidden = true; vista.textContent = '';
+  const c = h('section', 'card'); c.appendChild(h('h1', null, 'Falta tu enlace'));
+  c.appendChild(h('p', 'lbl', 'Abre el enlace personal que te mandó el entrenador, o cópialo y pégalo aquí.'));
+  const i = h('input'); i.type = 'text'; i.placeholder = 'Pega aquí tu enlace'; i.setAttribute('autocapitalize', 'off'); i.setAttribute('autocomplete', 'off'); i.setAttribute('autocorrect', 'off');
+  const b = h('button', 'btn primario', 'Entrar'), m = h('div', 'msg'); b.type = 'button';
+  b.onclick = async () => {
+    const t = extraerToken(i.value);
+    if (!t) { m.className = 'msg err'; m.textContent = 'Ese enlace no vale. Copia el enlace completo del mensaje del entrenador.'; return; }
+    guardarToken(t); b.disabled = true; m.className = 'msg'; m.textContent = '';
+    try { await recargar(); } catch (e) { m.className = 'msg err'; m.textContent = 'No se han podido cargar tus datos. Prueba otra vez.'; b.disabled = false; }
+  };
+  c.append(i, b, m); vista.appendChild(c);
+}
+
 (async function arrancar() {
-  if (!leerToken()) return mensaje('Falta tu enlace', 'Abre el enlace personal que te mandó el entrenador.');
+  if (!leerToken()) return pedirEnlace();
   try { await recargar(); }
   catch (e) { mensaje('Sin conexión', 'No se han podido cargar tus datos. Abre la app cuando tengas red.'); }
 })();
