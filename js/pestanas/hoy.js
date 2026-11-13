@@ -10,7 +10,7 @@ const PREGUNTAS = [
   ['balance', 'Balance calórico de hoy', 'c3', [['deficit', 'Déficit'], ['mantenimiento', 'Normal'], ['superavit', 'De más']], 'déficit = comprobado con Fitia y WHOOP'],
   ['estres', 'Estrés del día', 'c5', [1, 2, 3, 4, 5].map(x => [x, String(x)]), '1 = nada · 5 = mucho'],
   ['sensacion', 'Cómo te has sentido', 'c5', [1, 2, 3, 4, 5].map(x => [x, String(x)]), '1 = fatal · 5 = genial'],
-  ['rpe', 'Esfuerzo de la sesión principal', 'c6', [[null, '—'], [2, '≤2'], [4, '3–4'], [6, '5–6'], [8, '7–8'], [10, '9–10']], '— = sin sesión hoy'],
+  ['rpe', 'Esfuerzo de la sesión principal', 'c6', [[null, '—'], ...Array.from({ length: 11 }, (_, i) => [i, String(i)])], '— = sin sesión hoy · 0 = nada · 10 = máximo'],
   ['molestia', 'Molestia o dolor', 'c3', [['no', 'No'], ['leve', 'Leve'], ['limita', 'Me limita']]],
   ['enfermo', 'Síntomas de enfermedad', 'c2', [[false, 'No'], [true, 'Sí']]],
 ];
