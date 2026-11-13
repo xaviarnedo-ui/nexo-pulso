@@ -1,20 +1,65 @@
-import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, media, diasAtras } from './util.js';
+import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, media, diasAtras, fechaCorta } from './util.js';
 import { anillo, linea } from './graficos.js';
-import { guardarPeso, empezarAyuno, romperAyuno, guardarCheck, guardarCierre } from './datos.js';
+import { guardarPeso, empezarAyuno, romperAyuno, guardarCheck, guardarCierre, editarAyunoActual, editarAyuno, borrarAyuno } from './datos.js';
 
-let tick = null, horaTocada = false;
+let tick = null, horaTocada = false, editando = null;   // editando: 'actual' o el inicio del ayuno anterior que se corrige
 let formCierre = null, formFecha = null;   // el cierre a medias sobrevive a los repintados
 
 const cabecera = (t, pie) => { const c = h('div', 'cabecera'); c.appendChild(h('h2', null, t)); if (pie) c.appendChild(h('span', 'pie', pie)); return c; };
 
 // ------------------------------------------------------------------ ayuno
+const aviso = (m, t) => { m.className = 'msg err'; m.textContent = t; };
+// Corrección de horas del ayuno: datetime-local da 'AAAA-MM-DDTHH:MM', el mismo formato que se guarda.
+function editorAyuno({ inicio, fin, guardar, borrar, cancelar }) {
+  const caja = h('div', 'form-caja editor'), m = h('div', 'msg');
+  const qi = h('div', 'q'), ii = h('input'); ii.type = 'datetime-local'; ii.value = inicio; qi.append(h('span', 't', 'Empezó'), ii); caja.appendChild(qi);
+  let fi = null;
+  if (fin !== undefined) { const qf = h('div', 'q'); fi = h('input'); fi.type = 'datetime-local'; fi.value = fin; qf.append(h('span', 't', 'Terminó'), fi); caja.appendChild(qf); }
+  const fila = h('div', 'fila'), ok = h('button', 'btn', 'Guardar'), no = h('button', 'btn', 'Cancelar');
+  ok.type = no.type = 'button'; no.onclick = cancelar;
+  ok.onclick = async () => {
+    const a = ii.value, b = fi ? fi.value : null;
+    if (!a || (fi && !b)) return aviso(m, 'Pon las horas.');
+    if (new Date(a) > new Date()) return aviso(m, 'El inicio no puede estar en el futuro.');
+    if (b) {
+      const hh = (new Date(b) - new Date(a)) / 36e5;
+      if (hh <= 0) return aviso(m, 'El final tiene que ser posterior al inicio.');
+      if (hh > 48) return aviso(m, 'Un ayuno no puede pasar de 48 horas.');
+      if (new Date(b) > Date.now() + 5 * 6e4) return aviso(m, 'El final no puede estar en el futuro.');
+    }
+    ok.disabled = true; m.className = 'msg'; m.textContent = '';
+    try { await guardar(a, b); } catch (e) { aviso(m, 'No se ha podido guardar. Prueba otra vez.'); ok.disabled = false; }
+  };
+  fila.append(ok, no);
+  if (borrar) { const del = h('button', 'enlace', 'Borrar este ayuno'); del.type = 'button'; del.onclick = async () => { if (confirm('¿Borrar este ayuno?')) { try { await borrar(); } catch (e) { aviso(m, 'No se ha podido borrar.'); } } }; fila.appendChild(del); }
+  caja.append(fila, m); return caja;
+}
+
+function ayunosAnteriores(estado, recargar, repintar) {
+  const ult = estado.ayunos.slice(0, 7); if (!ult.length) return null;
+  const det = h('details', 'plan'), sum = h('summary'); sum.appendChild(h('span', null, 'Ayunos anteriores')); det.appendChild(sum);
+  det.open = editando && editando !== 'actual';
+  const lista = h('div', 'ayunos-prev');
+  ult.forEach(a => {
+    if (editando === a.inicio) {
+      lista.appendChild(editorAyuno({ inicio: a.inicio, fin: a.fin, cancelar: () => { editando = null; repintar(); },
+        guardar: async (i, f) => { await editarAyuno(a.inicio, i, f); editando = null; await recargar(); },
+        borrar: async () => { await borrarAyuno(a.inicio); editando = null; await recargar(); } }));
+      return;
+    }
+    const fila = h('div', 'fila'), t = h('div', 'crece', fechaCorta(a.inicio.slice(0, 10)) + ' · ' + a.inicio.slice(11) + ' → ' + a.fin.slice(11));
+    const b = h('button', 'enlace', num(a.horas) + ' h · editar'); b.type = 'button'; b.onclick = () => { editando = a.inicio; repintar(); };
+    fila.append(t, b); lista.appendChild(fila);
+  });
+  det.appendChild(lista); return det;
+}
 function dibujaAnillo(caja, inicio, meta) {
   const horas = inicio ? Math.max(0, (Date.now() - new Date(inicio)) / 36e5) : 0;
   const txt = inicio ? `${Math.floor(horas)}:${pad(Math.floor((horas % 1) * 60))}` : '—';
   caja.textContent = ''; caja.appendChild(anillo(inicio ? horas / meta : 0, horas >= meta ? 'var(--verde)' : 'var(--accent)', txt));
 }
 
-function tarjetaAyuno(estado, recargar) {
+function tarjetaAyuno(estado, recargar, repintar) {
   const c = h('section', 'card'), meta = estado.perfil.ayuno_horas || 12, inicio = estado.ayuno_actual;
   const fila = h('div', 'fila'), info = h('div', 'crece'), caja = h('div');
   dibujaAnillo(caja, inicio, meta); fila.appendChild(caja);
@@ -25,6 +70,12 @@ function tarjetaAyuno(estado, recargar) {
   const ult = estado.ayunos.slice(0, 7);
   if (ult.length) info.appendChild(h('div', 'pie', 'Media de los últimos ' + ult.length + ': ' + num(ult.reduce((s, x) => s + Number(x.horas), 0) / ult.length) + ' h'));
   fila.appendChild(info); c.appendChild(fila);
+  if (inicio) {
+    if (editando === 'actual') {
+      c.appendChild(editorAyuno({ inicio, cancelar: () => { editando = null; repintar(); },
+        guardar: async i => { await editarAyunoActual(i); editando = null; await recargar(); } }));
+    } else { const enl = h('button', 'enlace', 'Corregir la hora de inicio'); enl.type = 'button'; enl.onclick = () => { editando = 'actual'; repintar(); }; c.appendChild(enl); }
+  }
   const hora = h('input'); hora.type = 'time'; hora.value = ahoraHHMM(); hora.oninput = () => { horaTocada = true; };
   const q = h('div', 'q'); q.appendChild(h('span', 't', inicio ? 'Hora de la primera comida' : 'Hora de la última comida')); q.appendChild(hora); c.appendChild(q);
   const btn = h('button', 'btn', inicio ? 'Rompo el ayuno' : 'Empiezo el ayuno'), m = h('div', 'msg');
@@ -37,6 +88,7 @@ function tarjetaAyuno(estado, recargar) {
     catch (e) { m.className = 'msg err'; m.textContent = 'No se ha podido guardar. Prueba otra vez.'; btn.disabled = false; }
   };
   c.appendChild(btn); c.appendChild(m);
+  const prev = ayunosAnteriores(estado, recargar, repintar); if (prev) c.appendChild(prev);
   clearInterval(tick);
   tick = setInterval(() => { if (!caja.isConnected) { clearInterval(tick); return; } dibujaAnillo(caja, inicio, meta); if (!horaTocada) hora.value = ahoraHHMM(); }, 30000);
   return c;
@@ -140,7 +192,7 @@ export function pintar(v, estado, { recargar, ir }) {
     t.appendChild(h('div', 'titulo-aviso', 'Tu menú está en preparación'));
     t.appendChild(h('div', 'vineta', 'En cuanto esté listo lo verás en la pestaña Menú.')); a.appendChild(t); v.appendChild(a);
   }
-  if (estado.perfil.ayuno_horas !== 0) v.appendChild(tarjetaAyuno(estado, recargar));   // 0 = no quiere ayunar: sin reloj
+  if (estado.perfil.ayuno_horas !== 0) v.appendChild(tarjetaAyuno(estado, recargar, repintar));   // 0 = no quiere ayunar: sin reloj
   v.appendChild(tarjetaPeso(estado, recargar));
   v.appendChild(tarjetaHabitos(estado, recargar, repintar));
   v.appendChild(tarjetaCierre(estado, recargar));
