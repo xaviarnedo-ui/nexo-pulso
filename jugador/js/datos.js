@@ -24,3 +24,8 @@ export const guardarCierre = (fecha, c) => rpc('jug_guardar_cierre', { p_fecha: 
 export const editarAyunoActual = inicio => rpc('jug_ayuno_editar_actual', { p_inicio: inicio });
 export const editarAyuno = (viejo, inicio, fin) => rpc('jug_ayuno_editar', { p_inicio_viejo: viejo, p_inicio: inicio, p_fin: fin });
 export const borrarAyuno = inicio => rpc('jug_ayuno_borrar', { p_inicio: inicio });
+const clavesPush = s => { const j = s.toJSON(); return { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth }; };
+export const pushAlta = s => rpc('jug_push_alta', clavesPush(s));
+export const pushBaja = endpoint => rpc('jug_push_baja', { p_endpoint: endpoint });
+export const avisosEstado = endpoint => rpc('jug_avisos_estado', { p_endpoint: endpoint || null });
+export const avisosGuardar = recordatorios => rpc('jug_avisos_guardar', { p_recordatorios: recordatorios });
