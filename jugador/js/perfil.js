@@ -2,7 +2,7 @@ import { h, num, edad, fechaCorta } from './util.js';
 import { linea } from './graficos.js';
 import { tendencia } from './hoy.js';
 import { suscripcionLocal, activarAvisos, desactivarAvisos } from './avisos.js';
-import { avisosEstado, avisosGuardar } from './datos.js';
+import { avisosEstado, avisosGuardar, olvidarToken } from './datos.js';
 
 // Avisos: el entrenador puede escribir al jugador y la app le recuerda el peso (08:00) y el cierre (22:00).
 function tarjetaAvisos() {
@@ -12,16 +12,19 @@ function tarjetaAvisos() {
   const rec = h('div', 'q'); rec.appendChild(h('span', 't', 'Recordatorios de peso y cierre'));
   const sel = h('div', 'opciones c2'), bs = h('button', null, 'Sí'), bn = h('button', null, 'No'); bs.type = bn.type = 'button'; sel.append(bs, bn); rec.appendChild(sel); rec.hidden = true;
   const pintaRec = on => { bs.setAttribute('aria-pressed', on ? 'true' : 'false'); bn.setAttribute('aria-pressed', on ? 'false' : 'true'); };
-  const etiqueta = s => { btn.textContent = s ? 'Avisos activados en este móvil · desactivar' : 'Activar avisos en este móvil'; rec.hidden = !s; };
+  let activo = false;                                       // este móvil suscrito Y conocido por el servidor con el enlace actual
+  const etiqueta = s => { activo = !!s; btn.textContent = s ? 'Avisos activados en este móvil · desactivar' : 'Activar avisos en este móvil'; rec.hidden = !s; };
   (async () => {
-    try { const s = await suscripcionLocal(); etiqueta(s); if (s) pintaRec((await avisosEstado(s.endpoint)).recordatorios); }
-    catch (e) { etiqueta(null); }
+    try {
+      const s = await suscripcionLocal();
+      if (!s) etiqueta(null); else { const e = await avisosEstado(s.endpoint); etiqueta(e.suscrito); pintaRec(e.recordatorios); }   // suscrito en el móvil pero no con este enlace → hay que volver a activar
+    } catch (e) { etiqueta(null); }
     btn.disabled = false;
   })();
   btn.onclick = async () => {
     btn.disabled = true; m.className = 'msg'; m.textContent = '';
     try {
-      if (await suscripcionLocal()) { await desactivarAvisos(); etiqueta(null); m.className = 'msg ok'; m.textContent = 'Avisos desactivados en este móvil.'; }
+      if (activo) { await desactivarAvisos(); etiqueta(null); m.className = 'msg ok'; m.textContent = 'Avisos desactivados en este móvil.'; }
       else { const s = await activarAvisos(); etiqueta(s); pintaRec((await avisosEstado(s.endpoint)).recordatorios); m.className = 'msg ok'; m.textContent = 'Avisos activados.'; }
     } catch (e) { m.className = 'msg err'; m.textContent = e.message || 'No se ha podido. Prueba otra vez.'; }
     btn.disabled = false;
@@ -57,4 +60,9 @@ export function pintar(v, estado, { editarFormulario }) {
   const f = h('section', 'card'); f.appendChild(h('div', 'destacado', 'Tu formulario'));
   f.appendChild(h('div', 'lbl', 'Enviado el ' + new Date(estado.formulario.enviado).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }) + '. Si algo cambia (una alergia, algo que ya no te gusta), corrígelo y avisa al entrenador.'));
   const b = h('button', 'btn', 'Editar mis respuestas'); b.onclick = editarFormulario; f.appendChild(b); v.appendChild(f);
+
+  // Si el móvil se ha quedado con el enlace de otra persona (p. ej. una prueba): se olvida y la app pide el suyo.
+  const o = h('button', 'enlace', '¿No eres ' + p.nombre.split(' ')[0] + '? Usar otro enlace'); o.type = 'button';
+  o.onclick = async () => { try { await desactivarAvisos(); } catch (e) { /* mejor esfuerzo */ } olvidarToken(); history.replaceState(null, '', location.pathname + '#hoy'); location.reload(); };
+  v.appendChild(o);
 }

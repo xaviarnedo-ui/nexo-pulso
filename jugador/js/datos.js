@@ -10,6 +10,8 @@ let token = null;
 export const extraerToken = txt => { const m = String(txt || '').match(/[?&]t=([0-9a-f]{32,})/i) || String(txt || '').trim().match(/^([0-9a-f]{32,})$/i); return m ? m[1] : null; };
 export function guardarToken(t) { token = t; try { localStorage.setItem(CLAVE, t); } catch (e) { /* sin almacenamiento: vale para esta sesión */ } }
 
+export function olvidarToken() { token = null; try { localStorage.removeItem(CLAVE); } catch (e) { /* sin almacenamiento */ } }
+
 export function leerToken() {
   const t = new URLSearchParams(location.search).get('t');
   try { if (t) localStorage.setItem(CLAVE, t); token = t || localStorage.getItem(CLAVE); } catch (e) { token = t; }
