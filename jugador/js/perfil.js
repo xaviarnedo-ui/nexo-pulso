@@ -4,12 +4,12 @@ import { tendencia } from './hoy.js';
 import { suscripcionLocal, activarAvisos, desactivarAvisos } from './avisos.js';
 import { avisosEstado, avisosGuardar, olvidarToken } from './datos.js';
 
-// Avisos: el entrenador puede escribir al jugador y la app le recuerda el peso (08:00) y el cierre (22:00).
+// Avisos: el entrenador puede escribir al jugador y la app le recuerda el peso y los suplementos (09:30) y el cierre (21:30).
 function tarjetaAvisos() {
   const c = h('section', 'card'), cab = h('div', 'cabecera'); cab.appendChild(h('h2', null, 'Avisos')); c.appendChild(cab);
-  c.appendChild(h('div', 'lbl', 'El entrenador puede escribirte y la app te recuerda apuntar el peso por la mañana y cerrar el día por la noche.'));
+  c.appendChild(h('div', 'lbl', 'El entrenador puede escribirte y la app te recuerda el peso y los suplementos por la mañana (9:30) y cerrar el día por la noche (21:30).'));
   const m = h('div', 'msg'), btn = h('button', 'btn', 'Comprobando…'); btn.type = 'button'; btn.disabled = true;
-  const rec = h('div', 'q'); rec.appendChild(h('span', 't', 'Recordatorios de peso y cierre'));
+  const rec = h('div', 'q'); rec.appendChild(h('span', 't', 'Recordatorios de peso, suplementos y cierre'));
   const sel = h('div', 'opciones c2'), bs = h('button', null, 'Sí'), bn = h('button', null, 'No'); bs.type = bn.type = 'button'; sel.append(bs, bn); rec.appendChild(sel); rec.hidden = true;
   const pintaRec = on => { bs.setAttribute('aria-pressed', on ? 'true' : 'false'); bn.setAttribute('aria-pressed', on ? 'false' : 'true'); };
   let activo = false;                                       // este móvil suscrito Y conocido por el servidor con el enlace actual

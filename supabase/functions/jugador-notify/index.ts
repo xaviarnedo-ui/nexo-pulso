@@ -1,6 +1,6 @@
 // Edge Function "jugador-notify" (Pulso · Jugador). Desplegar con: npx supabase functions deploy jugador-notify --no-verify-jwt
 // (o pegarla en el editor de Edge Functions de Supabase). La protege x-pulso-secret, el mismo que pulso-notify.
-// Tipos: "manual" (lo llama el panel del entrenador) y "recordatorios" (lo llama pg_cron cada hora: 08:00 peso, 22:00 cierre, hora de Madrid).
+// Tipos: "manual" (lo llama el panel del entrenador) y "recordatorios" (lo llama pg_cron cada hora en punto y media: 09:30 peso y suplementación, 21:30 cierre, hora de Madrid).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 
@@ -11,7 +11,7 @@ const ZONA = 'Europe/Madrid';
 
 // Sin cifras ni datos de salud: se ven en la pantalla bloqueada.
 const TEXTOS = {
-  peso: { title: 'Tu peso de hoy', body: 'Apúntalo antes de desayunar.', url: './#hoy' },
+  peso: { title: 'Peso y suplementación', body: 'Apunta tu peso y no olvides los suplementos.', url: './#hoy' },
   cierre: { title: 'Cierre del día', body: 'Medio minuto y listo.', url: './#hoy' },
 };
 const TTL = { peso: 4 * 3600, cierre: 4 * 3600, manual: 12 * 3600 };
@@ -21,11 +21,11 @@ const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { sta
 function local() {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: ZONA, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })
     .formatToParts(new Date()).map((x) => [x.type, x.value]));
-  const hora = Number(p.hour);
+  const hora = Number(p.hour), minuto = Number(new Intl.DateTimeFormat('en-GB', { timeZone: ZONA, minute: '2-digit' }).format(new Date()));
   const hoy = `${p.year}-${p.month}-${p.day}`;
   const d = new Date(`${hoy}T12:00:00Z`);
   if (hora < 5) d.setUTCDate(d.getUTCDate() - 1);                       // de madrugada todavía cuenta el día anterior
-  return { hora, hoy, fechaCierre: d.toISOString().slice(0, 10) };
+  return { hora, minuto, hoy, fechaCierre: d.toISOString().slice(0, 10) };
 }
 
 async function enviar(jugadorIds: string[], texto: object, ttl: number) {
@@ -66,17 +66,20 @@ Deno.serve(async (req) => {
       return json(await enviar(ids, { title: titulo, body: texto, url: './#hoy' }, TTL.manual));
     }
     if (body.tipo === 'recordatorios') {
-      const { hora, hoy, fechaCierre } = local();
-      const que: 'peso' | 'cierre' | null = body.forzar === 'peso' || body.forzar === 'cierre' ? body.forzar : hora === 8 ? 'peso' : hora === 22 ? 'cierre' : null;
+      const { hora, minuto, hoy, fechaCierre } = local();
+      const que: 'peso' | 'cierre' | null = body.forzar === 'peso' || body.forzar === 'cierre' ? body.forzar : minuto < 30 ? null : hora === 9 ? 'peso' : hora === 21 ? 'cierre' : null;
       if (!que) return json({ nada: true });
       const todos = await activos();
       const { data: apagados, error: e1 } = await sb.from('jug_avisos').select('jugador_id').eq('recordatorios', false);
       if (e1) throw e1;
       const off = new Set((apagados ?? []).map((a) => a.jugador_id as string));
-      const tabla = que === 'peso' ? 'jug_pesos' : 'jug_cierres', fecha = que === 'peso' ? hoy : fechaCierre;
-      const { data: hechos, error: e2 } = await sb.from(tabla).select('jugador_id').eq('fecha', fecha);
-      if (e2) throw e2;                                                   // sin saber quién ya lo ha hecho, mejor no avisar
-      const ya = new Set((hechos ?? []).map((a) => a.jugador_id as string));
+      // El cierre solo se recuerda a quien aún no lo ha hecho; el aviso de peso y suplementos va a todos (los suplementos no se registran).
+      let ya = new Set<string>();
+      if (que === 'cierre') {
+        const { data: hechos, error: e2 } = await sb.from('jug_cierres').select('jugador_id').eq('fecha', fechaCierre);
+        if (e2) throw e2;                                                 // sin saber quién ya lo ha hecho, mejor no avisar
+        ya = new Set((hechos ?? []).map((a) => a.jugador_id as string));
+      }
       return json(await enviar(todos.filter((id) => !off.has(id) && !ya.has(id)), TEXTOS[que], TTL[que]));
     }
     return json({ error: 'tipo' }, 400);
