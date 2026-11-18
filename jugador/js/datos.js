@@ -26,7 +26,7 @@ export const guardarPeso = (fecha, kg) => rpc('jug_guardar_peso', { p_fecha: fec
 export const empezarAyuno = inicio => rpc('jug_ayuno_empezar', { p_inicio: inicio });
 export const romperAyuno = (inicio, fin) => rpc('jug_ayuno_romper', { p_inicio: inicio, p_fin: fin });
 export const guardarCheck = (fecha, habito, hecho) => rpc('jug_guardar_check', { p_fecha: fecha, p_habito: habito, p_hecho: hecho });
-export const guardarCierre = (fecha, c) => rpc('jug_guardar_cierre', { p_fecha: fecha, p_menu: c.menu, p_hambre: c.hambre, p_energia: c.energia, p_sueno: c.sueno, p_nota: c.nota || '' });
+export const guardarCierre = (fecha, c) => rpc('jug_guardar_cierre_v2', { p_fecha: fecha, p_datos: { ...c, rpe: c.rpe ?? null } });
 export const editarAyunoActual = inicio => rpc('jug_ayuno_editar_actual', { p_inicio: inicio });
 export const editarAyuno = (viejo, inicio, fin) => rpc('jug_ayuno_editar', { p_inicio_viejo: viejo, p_inicio: inicio, p_fin: fin });
 export const borrarAyuno = inicio => rpc('jug_ayuno_borrar', { p_inicio: inicio });

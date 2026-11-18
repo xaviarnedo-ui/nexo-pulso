@@ -149,35 +149,50 @@ function tarjetaHabitos(estado, recargar, repintar) {
 }
 
 // -------------------------------------------------------------------- cierre
+const N5 = [1, 2, 3, 4, 5].map(x => [x, String(x)]);
 const PREG = [
-  ['menu', '¿Has seguido el menú?', 'c3', [['si', 'Sí'], ['casi', 'Casi'], ['no', 'No']]],
-  ['hambre', 'Hambre durante el día', 'c5', [1, 2, 3, 4, 5].map(x => [x, String(x)]), '1 = ninguna · 5 = mucha'],
-  ['energia', 'Energía', 'c5', [1, 2, 3, 4, 5].map(x => [x, String(x)]), '1 = sin fuerzas · 5 = a tope'],
-  ['sueno', 'Cómo has dormido', 'c5', [1, 2, 3, 4, 5].map(x => [x, String(x)]), '1 = fatal · 5 = genial'],
+  ['comida', 'La comida de hoy', 'c3', [['cumplido', 'Cumplido'], ['menos', 'Menos'], ['mas', 'Más']], 'respecto al menú'],
+  ['ultraprocesados', '¿Has tomado ultraprocesados?', 'c2', [[false, 'No'], [true, 'Sí']], 'bollería, refrescos, snacks, precocinados'],
+  ['hambre', 'Hambre durante el día', 'c5', N5, '1 = ninguna · 5 = mucha'],
+  ['alcohol', 'Alcohol hoy', 'c3', [['0', '0'], ['1-2', '1–2'], ['3+', '3+']]],
+  ['cafeina_tarde', 'Café o cafeína después de las 15:30', 'c2', [[false, 'No'], [true, 'Sí']]],
+  ['estres', 'Estrés del día', 'c5', N5, '1 = nada · 5 = mucho'],
+  ['sensacion', 'Cómo te has sentido', 'c5', N5, '1 = fatal · 5 = genial'],
+  ['sueno', 'Cómo has dormido', 'c5', N5, '1 = fatal · 5 = genial'],
+  ['rpe', 'Esfuerzo de la sesión principal', 'c6', [[null, '—'], ...Array.from({ length: 11 }, (_, i) => [i, String(i)])], '— = sin sesión hoy · 0 = nada · 10 = máximo'],
+  ['molestia', 'Molestia o dolor', 'c3', [['no', 'No'], ['leve', 'Leve'], ['limita', 'Me limita']]],
+  ['enfermo', 'Síntomas de enfermedad', 'c2', [[false, 'No'], [true, 'Sí']]],
 ];
+const CAMPOS_CIERRE = PREG.map(x => x[0]);
 function tarjetaCierre(estado, recargar) {
   const fecha = fechaCierre(), c = h('section', 'card'), previo = estado.cierres.find(x => x.fecha === fecha);
   c.appendChild(cabecera('Cierre del día', previo ? 'hecho ✓' : null));
   if (formFecha !== fecha) { formCierre = null; formFecha = null; }
-  if (!formCierre) { formCierre = { menu: null, hambre: null, energia: null, sueno: null, nota: '' }; formFecha = fecha; if (previo) Object.assign(formCierre, previo); }
+  if (!formCierre) {
+    formCierre = { rpe: undefined, molestia_zona: '', nota: '' }; for (const k of CAMPOS_CIERRE) if (k !== 'rpe') formCierre[k] = null;
+    formFecha = fecha;
+    if (previo && previo.comida) Object.assign(formCierre, previo);     // un cierre del formato antiguo no se precarga
+  }
   const f = formCierre, guardar = h('button', 'btn primario', previo ? 'Actualizar cierre' : 'Guardar cierre'), m = h('div', 'msg');
-  const completo = () => f.menu && f.hambre && f.energia && f.sueno;
+  const completo = () => CAMPOS_CIERRE.every(k => k === 'rpe' ? f.rpe !== undefined : f[k] !== null);
+  const zona = h('input'); zona.type = 'text'; zona.maxLength = 60; zona.placeholder = 'Zona (opcional)'; zona.value = f.molestia_zona || ''; zona.oninput = () => { f.molestia_zona = zona.value; };
+  const verZona = () => { zona.hidden = !(f.molestia === 'leve' || f.molestia === 'limita'); };
   for (const [campo, titulo, cols, ops, ayuda] of PREG) {
     const q = h('div', 'q'), t = h('span', 't', titulo); if (ayuda) { t.appendChild(document.createTextNode(' ')); t.appendChild(h('small', null, ayuda)); } q.appendChild(t);
     const g = h('div', 'opciones ' + cols);
     for (const [val, et] of ops) {
       const b = h('button', null, et); b.type = 'button'; b.setAttribute('aria-pressed', f[campo] === val ? 'true' : 'false');
-      b.onclick = () => { f[campo] = val; g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); guardar.disabled = !completo(); };
+      b.onclick = () => { f[campo] = val; g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); verZona(); guardar.disabled = !completo(); };
       g.appendChild(b);
     }
-    q.appendChild(g); c.appendChild(q);
+    q.appendChild(g); if (campo === 'molestia') { verZona(); q.appendChild(zona); } c.appendChild(q);
   }
   const nota = h('input'); nota.type = 'text'; nota.maxLength = 300; nota.placeholder = 'Algo que contar (opcional)'; nota.value = f.nota || ''; nota.oninput = () => { f.nota = nota.value; };
   c.appendChild(nota);
   guardar.disabled = !completo();
   guardar.onclick = async () => {
     guardar.disabled = true; m.className = 'msg'; m.textContent = 'Guardando…';
-    try { await guardarCierre(fecha, f); formCierre = null; formFecha = null; await recargar(); }
+    try { await guardarCierre(fecha, { ...f, molestia_zona: zona.hidden ? '' : (f.molestia_zona || '').trim() }); formCierre = null; formFecha = null; await recargar(); }
     catch (e) { m.className = 'msg err'; m.textContent = 'No se ha podido guardar. Prueba otra vez.'; guardar.disabled = false; }
   };
   c.appendChild(guardar); c.appendChild(m); return c;
