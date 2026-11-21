@@ -15,3 +15,6 @@ export const edad = (nacimiento, hoy = new Date()) => {
 };
 export function h(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 export const media = xs => { const v = xs.filter(x => typeof x === 'number' && Number.isFinite(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+
+// Nombre con el que se saluda: el alias que haya puesto el entrenador o, si no, el primer nombre.
+export const saludo = p => (p.alias && p.alias.trim()) || p.nombre.split(' ')[0];

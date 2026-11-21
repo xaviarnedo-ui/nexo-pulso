@@ -1,5 +1,5 @@
 import { leerToken, cargar, extraerToken, guardarToken } from './datos.js';
-import { h } from './util.js';
+import { h, saludo } from './util.js';
 import * as hoy from './hoy.js';
 import * as menu from './menu.js';
 import * as perfil from './perfil.js';
@@ -33,7 +33,7 @@ function pintar() {
   if (!estado.formulario || editandoForm) {
     tabs.hidden = true;
     if (!estado.formulario) {
-      const c = h('section', 'card'); c.appendChild(h('div', 'destacado', 'Hola, ' + estado.perfil.nombre.split(' ')[0]));
+      const c = h('section', 'card'); c.appendChild(h('div', 'destacado', 'Hola, ' + saludo(estado.perfil)));
       c.appendChild(h('div', 'lbl', 'Antes de empezar necesito conocerte: alergias, lo que te gusta y cómo es tu día. Son unos 5 minutos y es lo que hace que el menú sea tuyo de verdad.'));
       vista.appendChild(c);
     }

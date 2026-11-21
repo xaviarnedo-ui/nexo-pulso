@@ -1,4 +1,4 @@
-import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, media, diasAtras, fechaCorta } from './util.js';
+import { h, num, pad, isoDia, isoLocal, ahoraHHMM, fechaCierre, media, diasAtras, fechaCorta, saludo } from './util.js';
 import { anillo, linea } from './graficos.js';
 import { guardarPeso, empezarAyuno, romperAyuno, guardarCheck, guardarCierre, editarAyunoActual, editarAyuno, borrarAyuno } from './datos.js';
 
@@ -201,7 +201,7 @@ function tarjetaCierre(estado, recargar) {
 export function pintar(v, estado, { recargar, ir }) {
   clearInterval(tick);
   const repintar = () => { v.textContent = ''; pintar(v, estado, { recargar, ir }); };
-  v.appendChild(h('h1', null, 'Hola, ' + estado.perfil.nombre.split(' ')[0]));
+  v.appendChild(h('h1', null, 'Hola, ' + saludo(estado.perfil)));
   if (!estado.menu) {
     const a = h('div', 'aviso'); const t = h('div', 'crece');
     t.appendChild(h('div', 'titulo-aviso', 'Tu menú está en preparación'));

@@ -1,4 +1,4 @@
-import { h, num, edad, fechaCorta } from './util.js';
+import { h, num, edad, fechaCorta, saludo } from './util.js';
 import { linea } from './graficos.js';
 import { tendencia } from './hoy.js';
 import { suscripcionLocal, activarAvisos, desactivarAvisos } from './avisos.js';
@@ -62,7 +62,7 @@ export function pintar(v, estado, { editarFormulario }) {
   const b = h('button', 'btn', 'Editar mis respuestas'); b.onclick = editarFormulario; f.appendChild(b); v.appendChild(f);
 
   // Si el móvil se ha quedado con el enlace de otra persona (p. ej. una prueba): se olvida y la app pide el suyo.
-  const o = h('button', 'enlace', '¿No eres ' + p.nombre.split(' ')[0] + '? Usar otro enlace'); o.type = 'button';
+  const o = h('button', 'enlace', '¿No eres ' + saludo(p) + '? Usar otro enlace'); o.type = 'button';
   o.onclick = async () => { try { await desactivarAvisos(); } catch (e) { /* mejor esfuerzo */ } olvidarToken(); history.replaceState(null, '', location.pathname + '#hoy'); location.reload(); };
   v.appendChild(o);
 }
