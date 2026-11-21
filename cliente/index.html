@@ -58,6 +58,25 @@ h2{font:600 20px/1.2 var(--serif);margin:0}
 .dia .bar i{position:absolute;left:0;right:0;bottom:0;background:var(--acc);border-radius:8px}
 .dia.hoy{color:var(--ink);font-weight:700}
 .dia.fut .bar{opacity:.4}
+.rut{list-style:none;margin:0 0 14px;padding:0}
+.rut li{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.3}
+.rut li:first-child{border-top:0}
+.rut .hr{flex:none;min-width:46px;max-width:80px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums}
+.rut .ic{flex:none;width:30px;height:30px;border-radius:9px;background:var(--soft);color:var(--acc);display:grid;place-items:center}
+.rut .ic svg{width:18px;height:18px}
+.sub{font:600 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 6px}
+.q{margin:14px 0 0}
+.q .t{display:block;font-weight:600;margin:0 0 6px}
+.q .t small{font-weight:400;color:var(--muted);font-size:13px}
+.op{display:grid;gap:6px}
+.op.c2{grid-template-columns:repeat(2,1fr)}.op.c3{grid-template-columns:repeat(3,1fr)}.op.c5{grid-template-columns:repeat(5,1fr)}.op.c6{grid-template-columns:repeat(6,1fr)}
+.op button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 15px var(--sans);border-radius:10px;min-height:44px;padding:6px 4px;cursor:pointer}
+.op button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.op button.ancho{grid-column:span 2}
+.campo{width:100%;font:16px var(--sans);padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);margin:8px 0 0}
+.cierre .btn{width:100%;margin-top:14px}
+.btn:disabled{opacity:.45;cursor:default}
+.ok-msg{color:var(--acc)}
 .msg{min-height:22px;font-size:14px;color:var(--err);margin:4px 0 0}
 .entrar input{width:100%;font:16px var(--sans);padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);margin:10px 0}
 .btn{border:0;background:var(--acc);color:var(--acc-ink);font:600 16px var(--sans);padding:12px 18px;border-radius:12px;cursor:pointer;min-height:44px}
@@ -71,10 +90,10 @@ h2{font:600 20px/1.2 var(--serif);margin:0}
 </div>
 <script>
 /* Pantalla «Hoy» del cliente: su Mapa de Hábitos con una casilla por día. Enlace personal (?t=...) y nada más: sin contraseña.
-   Los datos van a Pulso (Supabase UE) por dos funciones que exigen el token (cli_hoy y cli_guardar_check). La clave anon es pública por diseño. */
+   Los datos van a Pulso (Supabase UE) por funciones que exigen el token (cli_hoy, cli_guardar_check y cli_guardar_cierre). La clave anon es pública por diseño. */
 var SB_URL='https://lunaktorykgmhejojiai.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1bmFrdG9yeWtnbWhlam9qaWFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTg0NzgsImV4cCI6MjEwNzEzNDQ3OH0.BYIZrNLi4br2IVYP2vRe-r1vn_m2G5fyxaxMjGdaJZE',TKEY='nexo_cliente_token';
 /* Iconos de línea: copia exacta de Clientes/iconos.py (si cambia uno, cambiar los dos). */
-var ICONOS={"luna":"<path d=\"M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z\"/>","pantalla":"<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M4 4l16 16\"/>","manzana":"<path d=\"M12 7.5c-2-1.8-6.5-1.2-6.5 3.2 0 4 2.4 9.3 4.6 9.3.8 0 1.2-.5 1.9-.5s1.1.5 1.9.5c2.2 0 4.6-5.3 4.6-9.3 0-4.4-4.5-5-6.5-3.2z\"/><path d=\"M12 7.5c0-2 .8-3.4 2.6-4\"/>","pesa":"<path d=\"M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11\"/>","balon":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8.2l3.4 2.5-1.3 4h-4.2l-1.3-4z\"/><path d=\"M12 3v5.2M20.6 9.6l-5.2 1.1M17.3 19.3l-3.2-4.6M6.7 19.3l3.2-4.6M3.4 9.6l5.2 1.1\"/>","agua":"<path d=\"M12 3.5s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z\"/>","plato":"<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/>","hoja":"<path d=\"M5 19.5C5 11 10 5 20 4.5c0 10-5.5 15-14 15\"/><path d=\"M5 19.5l8.5-8.5\"/>","reloj":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3.2 2\"/>","sol":"<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6\"/>","taza":"<path d=\"M4.5 9h12v5.5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z\"/><path d=\"M16.5 10.5h1.5a2.5 2.5 0 0 1 0 5h-1.8M8.5 3.5v2.5M12.5 3.5v2.5\"/>","pasos":"<path d=\"M8.5 3.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4S6 9.7 6 7.5s.9-4 2.5-4zM6.8 14h3.4l-.3 3.8a1.4 1.4 0 0 1-2.8 0z\"/><path d=\"M15.5 7.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4-2.5-1.8-2.5-4 .9-4 2.5-4zM13.8 18h3.4\"/>","respira":"<path d=\"M3 9h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 17h6\"/>","check":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12.3l2.7 2.7L16 9.6\"/>"};
+var ICONOS={"luna":"<path d=\"M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z\"/>","pantalla":"<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M4 4l16 16\"/>","manzana":"<path d=\"M12 7.5c-2-1.8-6.5-1.2-6.5 3.2 0 4 2.4 9.3 4.6 9.3.8 0 1.2-.5 1.9-.5s1.1.5 1.9.5c2.2 0 4.6-5.3 4.6-9.3 0-4.4-4.5-5-6.5-3.2z\"/><path d=\"M12 7.5c0-2 .8-3.4 2.6-4\"/>","pesa":"<path d=\"M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11\"/>","balon":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8.2l3.4 2.5-1.3 4h-4.2l-1.3-4z\"/><path d=\"M12 3v5.2M20.6 9.6l-5.2 1.1M17.3 19.3l-3.2-4.6M6.7 19.3l3.2-4.6M3.4 9.6l5.2 1.1\"/>","agua":"<path d=\"M12 3.5s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z\"/>","plato":"<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/>","hoja":"<path d=\"M5 19.5C5 11 10 5 20 4.5c0 10-5.5 15-14 15\"/><path d=\"M5 19.5l8.5-8.5\"/>","reloj":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3.2 2\"/>","sol":"<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6\"/>","taza":"<path d=\"M4.5 9h12v5.5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z\"/><path d=\"M16.5 10.5h1.5a2.5 2.5 0 0 1 0 5h-1.8M8.5 3.5v2.5M12.5 3.5v2.5\"/>","pasos":"<path d=\"M8.5 3.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4S6 9.7 6 7.5s.9-4 2.5-4zM6.8 14h3.4l-.3 3.8a1.4 1.4 0 0 1-2.8 0z\"/><path d=\"M15.5 7.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4-2.5-1.8-2.5-4 .9-4 2.5-4zM13.8 18h3.4\"/>","respira":"<path d=\"M3 9h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 17h6\"/>","gafas":"<rect x=\"2.5\" y=\"9\" width=\"8\" height=\"6.5\" rx=\"2.6\"/><rect x=\"13.5\" y=\"9\" width=\"8\" height=\"6.5\" rx=\"2.6\"/><path d=\"M10.5 11.6c1-.9 2-.9 3 0M2.5 11l-.8-2.6M21.5 11l.8-2.6\"/>","check":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12.3l2.7 2.7L16 9.6\"/>"};
 function icono(n){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox','0 0 24 24');s.setAttribute('fill','none');s.setAttribute('stroke','currentColor');s.setAttribute('stroke-width','1.7');s.setAttribute('stroke-linecap','round');s.setAttribute('stroke-linejoin','round');s.setAttribute('aria-hidden','true');s.innerHTML=ICONOS[n]||ICONOS.check;return s}
 var DK=['dom','lun','mar','mie','jue','vie','sab'],INI=['L','M','X','J','V','S','D'];
 var token=null,E=null,dia=0; /* dia: 0 hoy, 1 ayer */
@@ -121,6 +140,60 @@ function boton(x,f,sub,alPulsar){
   return b;
 }
 
+var N5=[[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5']];
+var RPE=[[null,'Sin sesión']];for(var r=0;r<=10;r++)RPE.push([r,String(r)]);
+/* Mismas preguntas que el cierre de Pulso Jugador, más la rutina de sueño (sí o no). */
+var PREG=[
+  ['rutina','Anoche, ¿cumpliste tu rutina de sueño?','c2',[[true,'Sí'],[false,'No']]],
+  ['sueno','Cómo has dormido','c5',N5,'1 = fatal · 5 = genial'],
+  ['comida','La comida de hoy','c3',[['cumplido','Como el menú'],['menos','Menos'],['mas','Más']]],
+  ['ultraprocesados','¿Has tomado ultraprocesados?','c2',[[false,'No'],[true,'Sí']],'bollería, refrescos, snacks, precocinados'],
+  ['hambre','Hambre durante el día','c5',N5,'1 = ninguna · 5 = mucha'],
+  ['alcohol','Alcohol hoy','c3',[['0','0'],['1-2','1 o 2'],['3+','3 o más']]],
+  ['cafeina_tarde','Café o cafeína después de las 15:30','c2',[[false,'No'],[true,'Sí']]],
+  ['estres','Estrés del día','c5',N5,'1 = nada · 5 = mucho'],
+  ['sensacion','Cómo te has sentido','c5',N5,'1 = fatal · 5 = genial'],
+  ['rpe','Esfuerzo de la sesión principal','c6',RPE,'0 = nada · 10 = máximo'],
+  ['molestia','Molestia o dolor','c3',[['no','No'],['leve','Leve'],['limita','Me limita']]],
+  ['enfermo','Síntomas de enfermedad','c2',[[false,'No'],[true,'Sí']]]
+];
+var FORM={};  /* cierre a medias, por fecha: sobrevive a los repintados */
+function preguntas(){return PREG.filter(function(q){return q[0]!=='rutina'||(E.rutina&&E.rutina.length)})}
+function tarjetaCierre(f){
+  var previo=null;(E.cierres||[]).forEach(function(x){if(x.fecha===f)previo=x});
+  if(!FORM[f]){var o={molestia_zona:'',nota:''};preguntas().forEach(function(q){o[q[0]]=q[0]==='rpe'?undefined:null});
+    if(previo){Object.keys(o).forEach(function(k){if(previo[k]!==undefined)o[k]=previo[k]});if(previo.rpe===null)o.rpe=null}
+    FORM[f]=o}
+  var F=FORM[f],c=h('section','card cierre'),cab=h('div','cab');
+  cab.appendChild(h('h2',null,dia?'Cierre de ayer':'Cierre del día'));if(previo)cab.appendChild(h('span','cnt','Hecho'));c.appendChild(cab);
+  if(E.rutina&&E.rutina.length){c.appendChild(h('div','sub','Tu rutina de sueño'));var ul=h('ul','rut');
+    E.rutina.forEach(function(p){var li=h('li');li.appendChild(h('span','hr',p.hora||''));var ic=h('span','ic');ic.appendChild(icono(p.icono));li.appendChild(ic);li.appendChild(h('span',null,p.paso));ul.appendChild(li)});
+    c.appendChild(ul)}
+  var btn=h('button','btn',previo?'Actualizar cierre':'Guardar cierre');btn.type='button';
+  var completo=function(){return preguntas().every(function(q){return q[0]==='rpe'?F.rpe!==undefined:F[q[0]]!==null})};
+  var zona=h('input','campo');zona.type='text';zona.maxLength=60;zona.placeholder='Zona (opcional)';zona.value=F.molestia_zona||'';zona.oninput=function(){F.molestia_zona=zona.value};
+  var verZona=function(){zona.hidden=!(F.molestia==='leve'||F.molestia==='limita')};
+  preguntas().forEach(function(q){
+    var d=h('div','q'),t=h('span','t',q[1]);if(q[4]){t.appendChild(document.createTextNode(' '));t.appendChild(h('small',null,q[4]))}d.appendChild(t);
+    var g=h('div','op '+q[2]);
+    q[3].forEach(function(o){var b=h('button',(q[0]==='rpe'&&o[0]===null)?'ancho':null,o[1]);b.type='button';b.setAttribute('aria-pressed',F[q[0]]===o[0]?'true':'false');
+      b.addEventListener('click',function(){F[q[0]]=o[0];Array.prototype.forEach.call(g.children,function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true');verZona();btn.disabled=!completo()});
+      g.appendChild(b)});
+    d.appendChild(g);if(q[0]==='molestia'){verZona();d.appendChild(zona)}c.appendChild(d)});
+  var nota=h('input','campo');nota.type='text';nota.maxLength=300;nota.placeholder='Algo que contar (opcional)';nota.value=F.nota||'';nota.oninput=function(){F.nota=nota.value};c.appendChild(nota);
+  btn.disabled=!completo();
+  btn.addEventListener('click',function(){
+    btn.disabled=true;$('msg').textContent='';
+    var datos={};Object.keys(F).forEach(function(k){datos[k]=F[k]});if(zona.hidden)datos.molestia_zona='';datos.molestia_zona=(datos.molestia_zona||'').trim();
+    if(datos.rpe===undefined)datos.rpe=null;
+    rpc('cli_guardar_cierre',{p_token:token,p_fecha:f,p_datos:datos}).then(function(){
+      E.cierres=(E.cierres||[]).filter(function(x){return x.fecha!==f});var g2={fecha:f};Object.keys(datos).forEach(function(k){g2[k]=datos[k]});E.cierres.unshift(g2);
+      delete FORM[f];pintar();var m=$('msg');m.className='msg ok-msg';m.textContent='Cierre guardado.';setTimeout(function(){if(m.textContent==='Cierre guardado.'){m.textContent='';m.className='msg'}},2500);
+    }).catch(function(){btn.disabled=false;$('msg').className='msg';$('msg').textContent='No se ha podido guardar. Revisa la conexión y vuelve a intentarlo.'});
+  });
+  c.appendChild(btn);return c;
+}
+
 function pintar(){
   var d=fechaSel(),f=iso(d),v=$('vista');v.innerHTML='';
   $('titulo').textContent='Hola, '+E.nombre;$('fecha').textContent=larga(d);
@@ -136,6 +209,8 @@ function pintar(){
   var sem=E.habitos.filter(semanal);
   if(sem.length){var s=h('section','card'),cs=h('div','cab');cs.appendChild(h('h2',null,'Esta semana'));s.appendChild(cs);
     sem.forEach(function(x){var n=semanal(x);s.appendChild(boton(x,f,veces(x,d)+' de '+n+(dia?' · marca si lo hiciste ayer':' · marca el día que lo hagas')))});v.appendChild(s)}
+
+  v.appendChild(tarjetaCierre(f));
 
   var w=h('section','card'),cw=h('div','cab');cw.appendChild(h('h2',null,'Tu semana'));w.appendChild(cw);
   var g=h('div','sem'),l=lunes(d),hoyIso=iso(base());
@@ -160,7 +235,7 @@ function cargar(){
   if(!token){sinEnlace();return}
   rpc('cli_hoy',{p_token:token}).then(function(r){
     if(!r){try{localStorage.removeItem(TKEY)}catch(e){}token=null;sinEnlace('Este enlace ya no vale. Pega el nuevo que te enviemos.');return}
-    E=r;E.checks=E.checks||[];E.habitos=E.habitos||[];pintar();
+    E=r;E.checks=E.checks||[];E.habitos=E.habitos||[];E.cierres=E.cierres||[];E.rutina=E.rutina||[];pintar();
   }).catch(function(){$('vista').innerHTML='';$('msg').textContent='No se ha podido cargar. Revisa la conexión y vuelve a abrir la app.'});
 }
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&E)cargar()});
