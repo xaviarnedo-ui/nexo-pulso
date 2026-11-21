@@ -6,3 +6,4 @@ App del cierre del día, el ayuno y el estado de forma, fatiga, carrera y cuerpo
 - Este repositorio es público: **nunca** datos, `.env`, clave de servicio, secretos ni la clave VAPID privada.
 - Diseño: `rendimiento-xavi/docs/specs/2026-10-09-nexo-pulso-design.md`.
 - `semana/` y `alimentacion/`: hoja «Mi semana normal» y encuesta de preferencias de alimentación para clientes de NEXO Performance. Páginas en blanco, sin datos: lo que escribe el cliente se queda en su móvil hasta que lo envía (con enlace personal, a las tablas `cli_*`; sin él, por el menú de compartir). Ver `supabase/sql/04_clientes.sql`.
+- `cliente/`: pantalla «Hoy» de cada cliente de NEXO Performance (su Mapa de Hábitos con una casilla por día, los hábitos semanales con contador y su semana). Entra con su enlace personal; sin datos en la página. Ver `supabase/sql/11_clientes_habitos.sql`.
