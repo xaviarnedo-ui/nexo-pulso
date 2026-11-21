@@ -72,11 +72,16 @@ h2{font:600 20px/1.2 var(--serif);margin:0}
 .op.c2{grid-template-columns:repeat(2,1fr)}.op.c3{grid-template-columns:repeat(3,1fr)}.op.c5{grid-template-columns:repeat(5,1fr)}.op.c6{grid-template-columns:repeat(6,1fr)}
 .op button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 15px var(--sans);border-radius:10px;min-height:44px;padding:6px 4px;cursor:pointer}
 .op button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-.op button.ancho{grid-column:span 2}
+.op button.ancho{grid-column:1/-1}
 .campo{width:100%;font:16px var(--sans);padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);margin:8px 0 0}
 .cierre .btn{width:100%;margin-top:14px}
 .btn:disabled{opacity:.45;cursor:default}
 .ok-msg{color:var(--acc)}
+.af{display:flex;gap:14px;align-items:center}
+.anillo{flex:none;width:84px;height:84px}
+.ai b{display:block;font-weight:600}.ai small{display:block;color:var(--muted);font-size:13px;line-height:1.35;margin-top:2px}
+.ayuno .btn{width:100%;margin-top:12px}
+.enlace{border:0;background:none;color:var(--acc);font:600 14px var(--sans);padding:10px 0 0;cursor:pointer}
 .msg{min-height:22px;font-size:14px;color:var(--err);margin:4px 0 0}
 .entrar input{width:100%;font:16px var(--sans);padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);margin:10px 0}
 .btn{border:0;background:var(--acc);color:var(--acc-ink);font:600 16px var(--sans);padding:12px 18px;border-radius:12px;cursor:pointer;min-height:44px}
@@ -90,10 +95,10 @@ h2{font:600 20px/1.2 var(--serif);margin:0}
 </div>
 <script>
 /* Pantalla «Hoy» del cliente: su Mapa de Hábitos con una casilla por día. Enlace personal (?t=...) y nada más: sin contraseña.
-   Los datos van a Pulso (Supabase UE) por funciones que exigen el token (cli_hoy, cli_guardar_check y cli_guardar_cierre). La clave anon es pública por diseño. */
+   Los datos van a Pulso (Supabase UE) por funciones que exigen el token (cli_hoy, cli_guardar_check, cli_guardar_cierre y cli_ayuno_*). La clave anon es pública por diseño. */
 var SB_URL='https://lunaktorykgmhejojiai.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1bmFrdG9yeWtnbWhlam9qaWFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTg0NzgsImV4cCI6MjEwNzEzNDQ3OH0.BYIZrNLi4br2IVYP2vRe-r1vn_m2G5fyxaxMjGdaJZE',TKEY='nexo_cliente_token';
 /* Iconos de línea: copia exacta de Clientes/iconos.py (si cambia uno, cambiar los dos). */
-var ICONOS={"luna":"<path d=\"M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z\"/>","pantalla":"<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M4 4l16 16\"/>","manzana":"<path d=\"M12 7.5c-2-1.8-6.5-1.2-6.5 3.2 0 4 2.4 9.3 4.6 9.3.8 0 1.2-.5 1.9-.5s1.1.5 1.9.5c2.2 0 4.6-5.3 4.6-9.3 0-4.4-4.5-5-6.5-3.2z\"/><path d=\"M12 7.5c0-2 .8-3.4 2.6-4\"/>","pesa":"<path d=\"M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11\"/>","balon":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8.2l3.4 2.5-1.3 4h-4.2l-1.3-4z\"/><path d=\"M12 3v5.2M20.6 9.6l-5.2 1.1M17.3 19.3l-3.2-4.6M6.7 19.3l3.2-4.6M3.4 9.6l5.2 1.1\"/>","agua":"<path d=\"M12 3.5s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z\"/>","plato":"<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/>","hoja":"<path d=\"M5 19.5C5 11 10 5 20 4.5c0 10-5.5 15-14 15\"/><path d=\"M5 19.5l8.5-8.5\"/>","reloj":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3.2 2\"/>","sol":"<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6\"/>","taza":"<path d=\"M4.5 9h12v5.5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z\"/><path d=\"M16.5 10.5h1.5a2.5 2.5 0 0 1 0 5h-1.8M8.5 3.5v2.5M12.5 3.5v2.5\"/>","pasos":"<path d=\"M8.5 3.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4S6 9.7 6 7.5s.9-4 2.5-4zM6.8 14h3.4l-.3 3.8a1.4 1.4 0 0 1-2.8 0z\"/><path d=\"M15.5 7.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4-2.5-1.8-2.5-4 .9-4 2.5-4zM13.8 18h3.4\"/>","respira":"<path d=\"M3 9h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 17h6\"/>","gafas":"<rect x=\"2.5\" y=\"9\" width=\"8\" height=\"6.5\" rx=\"2.6\"/><rect x=\"13.5\" y=\"9\" width=\"8\" height=\"6.5\" rx=\"2.6\"/><path d=\"M10.5 11.6c1-.9 2-.9 3 0M2.5 11l-.8-2.6M21.5 11l.8-2.6\"/>","check":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12.3l2.7 2.7L16 9.6\"/>"};
+var ICONOS={"luna":"<path d=\"M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z\"/>","pantalla":"<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M4 4l16 16\"/>","manzana":"<path d=\"M12 7.5c-2-1.8-6.5-1.2-6.5 3.2 0 4 2.4 9.3 4.6 9.3.8 0 1.2-.5 1.9-.5s1.1.5 1.9.5c2.2 0 4.6-5.3 4.6-9.3 0-4.4-4.5-5-6.5-3.2z\"/><path d=\"M12 7.5c0-2 .8-3.4 2.6-4\"/>","pesa":"<path d=\"M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11\"/>","balon":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8.2l3.4 2.5-1.3 4h-4.2l-1.3-4z\"/><path d=\"M12 3v5.2M20.6 9.6l-5.2 1.1M17.3 19.3l-3.2-4.6M6.7 19.3l3.2-4.6M3.4 9.6l5.2 1.1\"/>","agua":"<path d=\"M12 3.5s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z\"/>","plato":"<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/>","hoja":"<path d=\"M5 19.5C5 11 10 5 20 4.5c0 10-5.5 15-14 15\"/><path d=\"M5 19.5l8.5-8.5\"/>","reloj":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3.2 2\"/>","sol":"<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6\"/>","taza":"<path d=\"M4.5 9h12v5.5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z\"/><path d=\"M16.5 10.5h1.5a2.5 2.5 0 0 1 0 5h-1.8M8.5 3.5v2.5M12.5 3.5v2.5\"/>","pasos":"<path d=\"M8.5 3.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4S6 9.7 6 7.5s.9-4 2.5-4zM6.8 14h3.4l-.3 3.8a1.4 1.4 0 0 1-2.8 0z\"/><path d=\"M15.5 7.5c1.6 0 2.5 1.8 2.5 4s-.9 4-2.5 4-2.5-1.8-2.5-4 .9-4 2.5-4zM13.8 18h3.4\"/>","respira":"<path d=\"M3 9h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 17h6\"/>","capsula":"<rect x=\"2.5\" y=\"8.5\" width=\"19\" height=\"7\" rx=\"3.5\" transform=\"rotate(-45 12 12)\"/><path d=\"M9.5 9.5l5 5\"/>","gafas":"<rect x=\"2.5\" y=\"9\" width=\"8\" height=\"6.5\" rx=\"2.6\"/><rect x=\"13.5\" y=\"9\" width=\"8\" height=\"6.5\" rx=\"2.6\"/><path d=\"M10.5 11.6c1-.9 2-.9 3 0M2.5 11l-.8-2.6M21.5 11l.8-2.6\"/>","check":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12.3l2.7 2.7L16 9.6\"/>"};
 function icono(n){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox','0 0 24 24');s.setAttribute('fill','none');s.setAttribute('stroke','currentColor');s.setAttribute('stroke-width','1.7');s.setAttribute('stroke-linecap','round');s.setAttribute('stroke-linejoin','round');s.setAttribute('aria-hidden','true');s.innerHTML=ICONOS[n]||ICONOS.check;return s}
 var DK=['dom','lun','mar','mie','jue','vie','sab'],INI=['L','M','X','J','V','S','D'];
 var token=null,E=null,dia=0; /* dia: 0 hoy, 1 ayer */
@@ -159,6 +164,54 @@ var PREG=[
 ];
 var FORM={};  /* cierre a medias, por fecha: sobrevive a los repintados */
 function preguntas(){return PREG.filter(function(q){return q[0]!=='rutina'||(E.rutina&&E.rutina.length)})}
+function tarjetaRutina(){
+  var c=h('section','card'),cab=h('div','cab');cab.appendChild(h('h2',null,'Rutina de sueño'));c.appendChild(cab);
+  var ul=h('ul','rut');
+  E.rutina.forEach(function(p){var li=h('li');li.appendChild(h('span','hr',p.hora||''));var ic=h('span','ic');ic.appendChild(icono(p.icono));li.appendChild(ic);li.appendChild(h('span',null,p.paso));ul.appendChild(li)});
+  c.appendChild(ul);return c;
+}
+
+/* Reloj de ayuno, como el de Pulso Jugador: hora de la última comida (empieza) y de la primera (rompe). Sin borrar. */
+var tick=null,editAyuno=false,horaTocada=false;
+function hhmm(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())}
+function local(d){return iso(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())}
+function coma(x){return (Math.round(x*10)/10).toString().replace('.',',')}
+function anillo(caja,inicio,meta){
+  var horas=inicio?Math.max(0,(Date.now()-new Date(inicio))/36e5):0,p=Math.min(1,inicio?horas/meta:0),r=34,cf=2*Math.PI*r;
+  var col=horas>=meta?'var(--acc)':'var(--acc)';
+  caja.innerHTML='<svg viewBox="0 0 84 84" width="84" height="84" aria-hidden="true"><circle cx="42" cy="42" r="'+r+'" fill="none" stroke="var(--track)" stroke-width="8"/>'+
+    '<circle cx="42" cy="42" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+(cf*p)+' '+cf+'" transform="rotate(-90 42 42)"/>'+
+    '<text x="42" y="47" text-anchor="middle" font-size="16" font-weight="600" fill="var(--ink)" font-family="system-ui,sans-serif">'+(inicio?Math.floor(horas)+':'+pad(Math.floor((horas%1)*60)):'0:00')+'</text></svg>';
+}
+function tarjetaAyuno(){
+  var c=h('section','card ayuno'),meta=E.ayuno_horas||12,inicio=E.ayuno_actual||null,cab=h('div','cab');
+  cab.appendChild(h('h2',null,'Ayuno'));c.appendChild(cab);
+  var fila=h('div','af'),caja=h('div','anillo'),info=h('div','ai');anillo(caja,inicio,meta);fila.appendChild(caja);
+  var horas=inicio?(Date.now()-new Date(inicio))/36e5:0;
+  info.appendChild(h('b',null,inicio?(horas>=meta?'Objetivo conseguido':'Ayuno en curso'):'Sin ayuno en curso'));
+  info.appendChild(h('small',null,inicio?'Desde las '+inicio.slice(11)+(inicio.slice(0,10)!==iso(new Date())?' de ayer':'')+' · objetivo '+meta+' h':'Al acabar de cenar, pon la hora. Objetivo: '+meta+' h.'));
+  var ult=(E.ayunos||[]).slice(0,7);
+  if(ult.length)info.appendChild(h('small',null,'Media de los últimos '+ult.length+': '+coma(ult.reduce(function(s,x){return s+Number(x.horas)},0)/ult.length)+' h'));
+  fila.appendChild(info);c.appendChild(fila);
+  var hora=h('input','campo');hora.type='time';hora.value=hhmm();hora.oninput=function(){horaTocada=true};
+  var q=h('div','q');q.appendChild(h('span','t',editAyuno?'Hora de inicio correcta':(inicio?'Hora de la primera comida':'Hora de la última comida')));q.appendChild(hora);c.appendChild(q);
+  if(editAyuno)hora.value=inicio.slice(11);
+  var btn=h('button','btn',editAyuno?'Guardar la hora':(inicio?'Rompo el ayuno':'Empiezo el ayuno'));btn.type='button';
+  btn.addEventListener('click',function(){
+    if(!hora.value){$('msg').textContent='Pon una hora.';return}
+    var d=new Date(),hm=hora.value.split(':');d.setHours(+hm[0],+hm[1],0,0);if(d>new Date(Date.now()+5*6e4))d.setDate(d.getDate()-1);
+    if(inicio&&!editAyuno&&d<=new Date(inicio)){$('msg').textContent='La hora tiene que ser posterior al inicio del ayuno.';return}
+    btn.disabled=true;$('msg').textContent='';
+    var fn=editAyuno?['cli_ayuno_editar_actual',{p_token:token,p_inicio:local(d)}]:(inicio?['cli_ayuno_romper',{p_token:token,p_inicio:inicio,p_fin:local(d)}]:['cli_ayuno_empezar',{p_token:token,p_inicio:local(d)}]);
+    rpc(fn[0],fn[1]).then(function(){editAyuno=false;horaTocada=false;cargar()})
+      .catch(function(){btn.disabled=false;$('msg').textContent='No se ha podido guardar. Revisa la conexión y vuelve a intentarlo.'});
+  });
+  c.appendChild(btn);
+  if(inicio){var e=h('button','enlace',editAyuno?'Cancelar':'Corregir la hora de inicio');e.type='button';e.addEventListener('click',function(){editAyuno=!editAyuno;pintar()});c.appendChild(e)}
+  clearInterval(tick);tick=setInterval(function(){if(!caja.isConnected){clearInterval(tick);return}anillo(caja,inicio,meta);if(!horaTocada&&!editAyuno)hora.value=hhmm()},30000);
+  return c;
+}
+
 function tarjetaCierre(f){
   var previo=null;(E.cierres||[]).forEach(function(x){if(x.fecha===f)previo=x});
   if(!FORM[f]){var o={molestia_zona:'',nota:''};preguntas().forEach(function(q){o[q[0]]=q[0]==='rpe'?undefined:null});
@@ -166,9 +219,7 @@ function tarjetaCierre(f){
     FORM[f]=o}
   var F=FORM[f],c=h('section','card cierre'),cab=h('div','cab');
   cab.appendChild(h('h2',null,dia?'Cierre de ayer':'Cierre del día'));if(previo)cab.appendChild(h('span','cnt','Hecho'));c.appendChild(cab);
-  if(E.rutina&&E.rutina.length){c.appendChild(h('div','sub','Tu rutina de sueño'));var ul=h('ul','rut');
-    E.rutina.forEach(function(p){var li=h('li');li.appendChild(h('span','hr',p.hora||''));var ic=h('span','ic');ic.appendChild(icono(p.icono));li.appendChild(ic);li.appendChild(h('span',null,p.paso));ul.appendChild(li)});
-    c.appendChild(ul)}
+  c.appendChild(h('p','vacio','Antes de dormir.'));
   var btn=h('button','btn',previo?'Actualizar cierre':'Guardar cierre');btn.type='button';
   var completo=function(){return preguntas().every(function(q){return q[0]==='rpe'?F.rpe!==undefined:F[q[0]]!==null})};
   var zona=h('input','campo');zona.type='text';zona.maxLength=60;zona.placeholder='Zona (opcional)';zona.value=F.molestia_zona||'';zona.oninput=function(){F.molestia_zona=zona.value};
@@ -210,6 +261,8 @@ function pintar(){
   if(sem.length){var s=h('section','card'),cs=h('div','cab');cs.appendChild(h('h2',null,'Esta semana'));s.appendChild(cs);
     sem.forEach(function(x){var n=semanal(x);s.appendChild(boton(x,f,veces(x,d)+' de '+n+(dia?' · marca si lo hiciste ayer':' · marca el día que lo hagas')))});v.appendChild(s)}
 
+  v.appendChild(tarjetaAyuno());
+  if(E.rutina&&E.rutina.length)v.appendChild(tarjetaRutina());
   v.appendChild(tarjetaCierre(f));
 
   var w=h('section','card'),cw=h('div','cab');cw.appendChild(h('h2',null,'Tu semana'));w.appendChild(cw);
@@ -235,7 +288,7 @@ function cargar(){
   if(!token){sinEnlace();return}
   rpc('cli_hoy',{p_token:token}).then(function(r){
     if(!r){try{localStorage.removeItem(TKEY)}catch(e){}token=null;sinEnlace('Este enlace ya no vale. Pega el nuevo que te enviemos.');return}
-    E=r;E.checks=E.checks||[];E.habitos=E.habitos||[];E.cierres=E.cierres||[];E.rutina=E.rutina||[];pintar();
+    E=r;E.checks=E.checks||[];E.habitos=E.habitos||[];E.cierres=E.cierres||[];E.rutina=E.rutina||[];E.ayunos=E.ayunos||[];pintar();
   }).catch(function(){$('vista').innerHTML='';$('msg').textContent='No se ha podido cargar. Revisa la conexión y vuelve a abrir la app.'});
 }
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&E)cargar()});
